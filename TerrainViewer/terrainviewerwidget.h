@@ -10,6 +10,7 @@
 #include <QMatrix4x4>
 
 #include "camera.h"
+#include "terrain.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -29,7 +30,7 @@ public:
 public slots:
 	void cleanup();
 	void printInfo();
-	void loadTerrain(const QImage& image);
+	void loadTerrain(const Terrain& terrain);
 
 protected:
 	void initializeGL() override;
@@ -44,9 +45,7 @@ private:
 	QOpenGLDebugLogger* m_logger;
 	QOpenGLShaderProgram* m_program;
 
-	GLfloat m_terrainHeight;
-	GLfloat m_terrainWidth;
-	GLfloat m_terrainMaxAltitude;
+	Terrain m_terrain;
 
 	QOpenGLVertexArrayObject m_vao;
 	QOpenGLBuffer m_vbo;

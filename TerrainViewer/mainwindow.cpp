@@ -3,6 +3,8 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+#include "terrain.h"
+
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
@@ -22,7 +24,10 @@ void MainWindow::loadFile()
 
 		if (!image.isNull())
 		{
-			ui.terrainViewerWidget->loadTerrain(image);
+			Terrain terrain(12.8f, 12.8f, 1.0f);
+			terrain.loadFromImage(image);
+
+			ui.terrainViewerWidget->loadTerrain(terrain);
 		}
 		else
 		{
