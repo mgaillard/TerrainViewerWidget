@@ -64,15 +64,15 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	assert(height > 0);
 	assert(width > 0);
 
-	// TODO: use a struct instead of GLfloat
 	// Compute the geometry of the terrain
-	std::vector<GLfloat> vertices(36 * (height - 1) * (width - 1));
+	const std::size_t numberVertices = 6 * (height - 1) * (width - 1);
+	std::vector<Vertex> vertices(numberVertices);
 
 	for (unsigned int i = 0; i < height - 1; i++)
 	{
 		for (unsigned int j = 0; j < width - 1; j++)
 		{
-			const auto index = 36 * (i * (width - 1) + j);
+			const std::size_t index = 6 * (i * (width - 1) + j);
 
 			const auto topLeftVertex = m_terrain.vertex(i, j);
 			const auto topLeftNormal = m_terrain.normal(i, j);
@@ -84,55 +84,27 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 			const auto bottomRightNormal = m_terrain.normal(i + 1, j + 1);
 
 			// Upper triangle
-			vertices[index + 0] = topLeftVertex.x();
-			vertices[index + 1] = topLeftVertex.y();
-			vertices[index + 2] = topLeftVertex.z();
-			vertices[index + 3] = topLeftNormal.x();
-			vertices[index + 4] = topLeftNormal.y();
-			vertices[index + 5] = topLeftNormal.z();
-
-			vertices[index + 6] = topRightVertex.x();
-			vertices[index + 7] = topRightVertex.y();
-			vertices[index + 8] = topRightVertex.z();
-			vertices[index + 9] = topRightNormal.x();
-			vertices[index + 10] = topRightNormal.y();
-			vertices[index + 11] = topRightNormal.z();
-
-			vertices[index + 12] = bottomRightVertex.x();
-			vertices[index + 13] = bottomRightVertex.y();
-			vertices[index + 14] = bottomRightVertex.z();
-			vertices[index + 15] = bottomRightNormal.x();
-			vertices[index + 16] = bottomRightNormal.y();
-			vertices[index + 17] = bottomRightNormal.z();
+			vertices[index + 0].setVertex(topLeftVertex);
+			vertices[index + 0].setNormal(topLeftNormal);
+			vertices[index + 1].setVertex(topRightVertex);
+			vertices[index + 1].setNormal(topRightNormal);
+			vertices[index + 2].setVertex(bottomRightVertex);
+			vertices[index + 2].setNormal(bottomRightNormal);
 
 			// Lower triangle
-			vertices[index + 18] = topLeftVertex.x();
-			vertices[index + 19] = topLeftVertex.y();
-			vertices[index + 20] = topLeftVertex.z();
-			vertices[index + 21] = topLeftNormal.x();
-			vertices[index + 22] = topLeftNormal.y();
-			vertices[index + 23] = topLeftNormal.z();
-
-			vertices[index + 24] = bottomRightVertex.x();
-			vertices[index + 25] = bottomRightVertex.y();
-			vertices[index + 26] = bottomRightVertex.z();
-			vertices[index + 27] = bottomRightNormal.x();
-			vertices[index + 28] = bottomRightNormal.y();
-			vertices[index + 29] = bottomRightNormal.z();
-
-			vertices[index + 30] = bottomLeftVertex.x();
-			vertices[index + 31] = bottomLeftVertex.y();
-			vertices[index + 32] = bottomLeftVertex.z();
-			vertices[index + 33] = bottomLeftNormal.x();
-			vertices[index + 34] = bottomLeftNormal.y();
-			vertices[index + 35] = bottomLeftNormal.z();
+			vertices[index + 3].setVertex(topLeftVertex);
+			vertices[index + 3].setNormal(topLeftNormal);
+			vertices[index + 4].setVertex(bottomRightVertex);
+			vertices[index + 4].setNormal(bottomRightNormal);
+			vertices[index + 5].setVertex(bottomLeftVertex);
+			vertices[index + 5].setNormal(bottomLeftNormal);
 		}
 	}
 
 	// Update the vbo
 	m_vbo.bind();
-	m_vbo.allocate(vertices.data(), vertices.size() * sizeof(GLfloat));
-	m_numberVertices = vertices.size() / 6;
+	m_vbo.allocate(vertices.data(), vertices.size() * sizeof(Vertex));
+	m_numberVertices = vertices.size();
 	m_vbo.release();
 
 	update();
@@ -163,35 +135,34 @@ void TerrainViewerWidget::initializeGL()
 	QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 	
 	// Declare a vector to hold vertices.
-	const std::vector<GLfloat> triangle = {
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
-
-		1.0f, 0.0f, 1.0f,
-		0.0f, 1.0f, 0.0f,
-		0.0f, 0.0f, 1.0f,
-		0.0f, 1.0f, 0.0f,
-		1.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f,
+	const std::vector<Vertex> triangle = {
+		{
+			0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f
+		},
+		{
+			0.0f, 0.0f, 1.0f,
+			0.0f, 1.0f, 0.0f,
+		},
+		{
+			1.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f
+		}
 	};
 
 	// Setup our vertex buffer object.
 	m_vbo.create();
 	m_vbo.bind();
 	// Upload from main memory to gpu memory.
-	m_vbo.allocate(triangle.data(), triangle.size() * sizeof(GLfloat));
-	m_numberVertices = triangle.size() / 6;
+	m_vbo.allocate(triangle.data(), triangle.size() * sizeof(Vertex));
+	m_numberVertices = triangle.size();
 
 	// Enable attributes
 	glEnableVertexAttribArray(posLoc);
 	glEnableVertexAttribArray(normalLoc);
 	// Tell OpenGL how to get the attribute values out of the vbo (stride and offset).
-	glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<const GLvoid*>(0));
-	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), reinterpret_cast<const GLvoid*>(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
+	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3 * sizeof(GLfloat)));
 
 	m_vbo.release();
 	m_program->release();

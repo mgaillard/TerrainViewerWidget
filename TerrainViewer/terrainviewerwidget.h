@@ -42,6 +42,30 @@ protected:
 	void wheelEvent(QWheelEvent* event) override;
 
 private:
+
+	/**
+	 * \brief A private type to temporarily store the data sent to OpenGL.
+	 */
+	struct Vertex
+	{
+		GLfloat x, y, z;
+		GLfloat nx, ny, nz;
+
+		void setVertex(const QVector3D& vertex)
+		{
+			x = vertex.x();
+			y = vertex.y();
+			z = vertex.z();
+		}
+
+		void setNormal(const QVector3D& normal)
+		{
+			nx = normal.x();
+			ny = normal.y();
+			nz = normal.z();
+		}
+	};
+
 	QOpenGLDebugLogger* m_logger;
 	QOpenGLShaderProgram* m_program;
 
