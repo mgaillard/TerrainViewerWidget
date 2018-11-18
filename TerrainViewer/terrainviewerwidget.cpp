@@ -193,6 +193,7 @@ void TerrainViewerWidget::paintGL()
 	// Setup PVM matrices
 	QMatrix4x4 worldMatrix;
 	worldMatrix.translate(-m_terrain.height() / 2, 0.0, -m_terrain.width() / 2);
+	const auto normalMatrix = worldMatrix.normalMatrix();
 	const auto viewMatrix = m_camera.viewMatrix();
 	const auto projectionMatrix = m_camera.projectionMatrix();
 	const auto pvmMatrix = projectionMatrix * viewMatrix * worldMatrix;
@@ -203,6 +204,14 @@ void TerrainViewerWidget::paintGL()
 	// Update PVM matrix
 	const int pvmMatrixLoc = m_program->uniformLocation("PVM");
 	m_program->setUniformValue(pvmMatrixLoc, pvmMatrix);
+
+	// Update M matrix
+	const int mMatrixLoc = m_program->uniformLocation("M");
+	m_program->setUniformValue(mMatrixLoc, worldMatrix);
+
+	// Update N matrix
+	const int nMatrixLoc = m_program->uniformLocation("N");
+	m_program->setUniformValue(nMatrixLoc, normalMatrix);
 	
 	// Retain the current Polygon Mode
 	// GLint previousPolygonMode[2];
