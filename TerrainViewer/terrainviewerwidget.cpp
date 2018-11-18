@@ -190,7 +190,7 @@ void TerrainViewerWidget::paintGL()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	// Setup PVM matrices
+	// Setup PVM and N matrices
 	QMatrix4x4 worldMatrix;
 	worldMatrix.translate(-m_terrain.height() / 2, 0.0, -m_terrain.width() / 2);
 	const auto normalMatrix = worldMatrix.normalMatrix();
@@ -212,15 +212,12 @@ void TerrainViewerWidget::paintGL()
 	// Update N matrix
 	const int nMatrixLoc = m_program->uniformLocation("N");
 	m_program->setUniformValue(nMatrixLoc, normalMatrix);
-	
-	// Retain the current Polygon Mode
-	// GLint previousPolygonMode[2];
-	// glGetIntegerv(GL_POLYGON_MODE, previousPolygonMode);
-	// Change Polygon Mode and draw the triangles
-	// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	// Update max_altitude
+	const int maxAltitudeLoc = m_program->uniformLocation("max_altitude");
+	m_program->setUniformValue(maxAltitudeLoc, m_terrain.maxAltitude());
+
 	glDrawArrays(GL_TRIANGLES, 0, m_numberVertices);
-	// Restore the previous Polygon Mode
-	// glPolygonMode(GL_FRONT_AND_BACK, previousPolygonMode[0]);
 
 	m_program->release();
 }
