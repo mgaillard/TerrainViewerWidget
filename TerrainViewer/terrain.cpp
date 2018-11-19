@@ -11,11 +11,11 @@ Terrain::Terrain(float width, float height, float maxAltitude) :
 {
 }
 
-void Terrain::loadFromImage(const QImage& image)
+bool Terrain::loadFromImage(const QImage& image)
 {
 	if (image.isNull())
 	{
-		return;
+		return false;
 	}
 
 	m_resolutionHeight = image.height();
@@ -29,7 +29,57 @@ void Terrain::loadFromImage(const QImage& image)
 		{
 			operator()(i, j) = (static_cast<float>(qGray(image.pixel(i, j))) / 255) * m_maxAltitude;
 		}
-	}	
+	}
+
+	return true;
+}
+
+bool Terrain::loadFromImage(const cv::Mat& image)
+{
+	// Check if the image is valid
+	if (image.data == nullptr)
+	{
+		return false;
+	}
+	
+	// Check if the format is supported
+	if (image.type() != CV_8U && image.type() != CV_16U)
+	{
+		return false;
+	}
+
+	// If the image file is composed of too few pixels
+	if (image.rows < 2 || image.cols < 2)
+	{
+		return false;
+	}
+
+	m_resolutionHeight = static_cast<unsigned int >(image.rows);
+	m_resolutionWidth = static_cast<unsigned int>(image.cols);
+
+	m_data.resize(m_resolutionHeight * m_resolutionWidth, 0.0f);
+
+	for (unsigned int i = 0; i < m_resolutionHeight; i++)
+	{
+		for (unsigned int j = 0; j < m_resolutionWidth; j++)
+		{
+			float normalizedValue = 0.0f;
+
+			switch (image.type())
+			{
+			case CV_8U:
+				normalizedValue = float(image.at<uint8_t>(i, j)) / std::numeric_limits<uint8_t>::max();
+				break;
+			case CV_16U:
+				normalizedValue = float(image.at<uint16_t>(i, j)) / std::numeric_limits<uint16_t>::max();
+				break;
+			}
+
+			operator()(i, j) = normalizedValue * m_maxAltitude;
+		}
+	}
+
+	return true;
 }
 
 float Terrain::width() const

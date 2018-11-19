@@ -6,6 +6,10 @@
 #include <QImage>
 #include <QVector3D>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 class Terrain
 {
 public:
@@ -13,10 +17,17 @@ public:
 	Terrain(float width, float height, float maxAltitude);
 
 	/**
-	 * \brief Load a terrain from an image.
+	 * \brief Load a terrain from an image
 	 * \param image A QImage containing the height map
 	 */
-	void loadFromImage(const QImage& image);
+	bool loadFromImage(const QImage& image);
+
+
+	/**
+	 * \brief Load a terrain from an image
+	 * \param image A cv::Mat image containing the height map
+	 */
+	bool loadFromImage(const cv::Mat& image);
 
 	/**
 	 * \brief Return the width of the terrain 

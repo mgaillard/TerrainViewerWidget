@@ -3,6 +3,10 @@
 #include <QFileDialog>
 #include <QMessageBox>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 #include "terrain.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -20,13 +24,10 @@ void MainWindow::loadFile()
 	// Check if file exists
 	if (QFileInfo::exists(fileName))
 	{
-		QImage image(fileName);
-
-		if (!image.isNull())
+		const auto image = cv::imread(fileName.toStdString(), cv::ImreadModes::IMREAD_ANYDEPTH);
+		Terrain terrain(10.0f, 10.0f, 1.0f);
+		if (terrain.loadFromImage(image))
 		{
-			Terrain terrain(12.8f, 12.8f, 1.0f);
-			terrain.loadFromImage(image);
-
 			ui.terrainViewerWidget->loadTerrain(terrain);
 		}
 		else
