@@ -1,5 +1,5 @@
-#version 400
-
+#version 430
+/*
 uniform float max_altitude;
 
 in vec3 position_world;
@@ -64,4 +64,12 @@ void main()
 {
 	vec3 color = shading_texture();
 	fragColor = vec4(color, 1.0);
+}
+*/
+
+out vec4 fragColor;
+
+void main()
+{
+	fragColor = vec4(0.0, 1.0, 0.0, 1.0);
 }

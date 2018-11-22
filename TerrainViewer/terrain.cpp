@@ -97,6 +97,11 @@ float Terrain::maxAltitude() const
 	return m_maxAltitude;
 }
 
+const float* Terrain::data() const
+{
+	return m_data.data();
+}
+
 unsigned int Terrain::resolutionWidth() const
 {
 	return m_resolutionWidth;

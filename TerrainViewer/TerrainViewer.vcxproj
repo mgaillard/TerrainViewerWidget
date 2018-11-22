@@ -138,6 +138,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\fragment_shader.glsl" />
+    <None Include="Shaders\tessellation_control.glsl" />
+    <None Include="Shaders\tessellation_evaluation.glsl" />
     <None Include="Shaders\vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>

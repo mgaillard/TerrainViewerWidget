@@ -1,22 +1,21 @@
-#version 400
+#version 430
 
-uniform mat4 PVM;
-uniform mat4 M;
-uniform mat3 N;
+uniform float terrain_height;
+uniform float terrain_width;
+uniform float terrain_max_altitude;
+
+uniform sampler2D terrain;
 
 in vec3 pos_attrib;
-in vec3 normal_attrib;
 
-out vec3 position_world;
-out vec3 normal_world;
+float height(const vec2 p)
+{
+	const vec2 texcoord = vec2(p.x / terrain_height, p.y / terrain_width);
+	return texture(terrain, texcoord);
+}
 
 void main()
 {
-	gl_Position = PVM * vec4(pos_attrib, 1.0);
-
-	//Compute world-space vertex position
-	position_world = vec3(M * vec4(pos_attrib, 1.0));
-
-	// Compute world-space normal position
-	normal_world = normalize(N * normal_attrib);
+	const float z = height(pos_attrib.xy);
+	gl_Position = vec4(pos_attrib.xy, z, 1.0);
 }

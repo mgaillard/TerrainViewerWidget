@@ -48,6 +48,12 @@ public:
 	float maxAltitude() const;
 
 	/**
+	 * \brief Returns pointer to the underlying array serving as element storage.
+	 * \return A pointer to the underlying array serving as element storage.
+	 */
+	const float* data() const;
+
+	/**
 	 * \brief Return the terrain resolution on the width axis
 	 * \return The terrain resolution on the width axis
 	 */

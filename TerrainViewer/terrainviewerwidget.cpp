@@ -9,10 +9,13 @@
 
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	QOpenGLWidget(parent),
+	m_numberPatchesHeight(0),
+	m_numberPatchesWidth(0),
+	m_numberPatches(0),
 	m_logger(new QOpenGLDebugLogger(this)),
 	m_program(nullptr),
 	m_terrain(0.0f, 0.0f, 0.0f),
-	m_numberVertices(0),
+	m_terrainTexture(QOpenGLTexture::Target2D),
 	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
 {
 }
@@ -64,48 +67,42 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	assert(height > 0);
 	assert(width > 0);
 
-	// Compute the geometry of the terrain
-	const std::size_t numberVertices = 6 * (height - 1) * (width - 1);
-	std::vector<Vertex> vertices(numberVertices);
+	// Generate patches to match the terrain
+	m_numberPatchesHeight = height / 32;
+	m_numberPatchesWidth = width / 32;
+	m_numberPatches = m_numberPatchesWidth * m_numberPatchesHeight;
 
-	for (unsigned int i = 0; i < height - 1; i++)
+	const auto patchSizeWidth = m_terrain.width() / m_numberPatchesWidth;
+	const auto patchSizeHeight = m_terrain.height() / m_numberPatchesHeight;
+
+	std::vector<Patch> patches;
+	patches.reserve(m_numberPatches);
+	for (int i = 0; i < m_numberPatchesHeight; i++)
 	{
-		for (unsigned int j = 0; j < width - 1; j++)
+		for (int j = 0; j < m_numberPatchesWidth; j++)
 		{
-			const std::size_t index = 6 * (i * (width - 1) + j);
+			const auto x = patchSizeHeight * i;
+			const auto y = patchSizeWidth * j;
 
-			const auto topLeftVertex = m_terrain.vertex(i, j);
-			const auto topLeftNormal = m_terrain.normal(i, j);
-			const auto topRightVertex = m_terrain.vertex(i, j + 1);
-			const auto topRightNormal = m_terrain.normal(i, j + 1);
-			const auto bottomLeftVertex = m_terrain.vertex(i + 1, j);
-			const auto bottomLeftNormal = m_terrain.normal(i + 1, j);
-			const auto bottomRightVertex = m_terrain.vertex(i + 1, j + 1);
-			const auto bottomRightNormal = m_terrain.normal(i + 1, j + 1);
-
-			// Upper triangle
-			vertices[index + 0].setVertex(topLeftVertex);
-			vertices[index + 0].setNormal(topLeftNormal);
-			vertices[index + 1].setVertex(topRightVertex);
-			vertices[index + 1].setNormal(topRightNormal);
-			vertices[index + 2].setVertex(bottomRightVertex);
-			vertices[index + 2].setNormal(bottomRightNormal);
-
-			// Lower triangle
-			vertices[index + 3].setVertex(topLeftVertex);
-			vertices[index + 3].setNormal(topLeftNormal);
-			vertices[index + 4].setVertex(bottomRightVertex);
-			vertices[index + 4].setNormal(bottomRightNormal);
-			vertices[index + 5].setVertex(bottomLeftVertex);
-			vertices[index + 5].setNormal(bottomLeftNormal);
+			patches.emplace_back(x, y, patchSizeHeight, patchSizeWidth);
 		}
 	}
 
 	// Update the vbo
 	m_vbo.bind();
-	m_vbo.allocate(vertices.data(), vertices.size() * sizeof(Vertex));
-	m_numberVertices = vertices.size();
+	m_vbo.allocate(patches.data(), patches.size() * sizeof(Patch));
 	m_vbo.release();
+	
+	// Init the texture to store the height of the terrain
+	m_terrainTexture.destroy();
+	m_terrainTexture.create();
+	m_terrainTexture.setFormat(QOpenGLTexture::R32F);
+	m_terrainTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_terrainTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_terrainTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_terrainTexture.setSize(width, height);
+	m_terrainTexture.allocateStorage();
+	m_terrainTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
 
 	update();
 }
@@ -116,16 +113,16 @@ void TerrainViewerWidget::initializeGL()
 
 	initializeOpenGLFunctions();
 	m_logger->initialize();
-	glClearColor(0.5, 0.5, 0.5, 1.0);	
+	glClearColor(0.0, 0.0, 0.0, 1.0);	
 
 	const auto posLoc = 0;
-	const auto normalLoc = 1;
 
 	m_program = new QOpenGLShaderProgram;
 	m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/MainWindow/Shaders/vertex_shader.glsl");
+	m_program->addShaderFromSourceFile(QOpenGLShader::TessellationControl, ":/MainWindow/Shaders/tessellation_control.glsl");
+	m_program->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation, ":/MainWindow/Shaders/tessellation_evaluation.glsl");
 	m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/MainWindow/Shaders/fragment_shader.glsl");
 	m_program->bindAttributeLocation("pos_attrib", posLoc);
-	m_program->bindAttributeLocation("normal_attrib", normalLoc);
 	m_program->link();
 
 	m_program->bind();
@@ -133,44 +130,22 @@ void TerrainViewerWidget::initializeGL()
 	// Create a vertex array object.
 	m_vao.create();
 	QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-	
-	// Declare a vector to hold vertices.
-	const std::vector<Vertex> triangle = {
-		{
-			0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f
-		},
-		{
-			0.0f, 0.0f, 1.0f,
-			0.0f, 1.0f, 0.0f,
-		},
-		{
-			1.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f
-		}
-	};
-
 	// Setup our vertex buffer object.
 	m_vbo.create();
 	m_vbo.bind();
-	// Upload from main memory to gpu memory.
-	m_vbo.allocate(triangle.data(), triangle.size() * sizeof(Vertex));
-	m_numberVertices = triangle.size();
 
 	// Enable attributes
 	glEnableVertexAttribArray(posLoc);
-	glEnableVertexAttribArray(normalLoc);
 	// Tell OpenGL how to get the attribute values out of the vbo (stride and offset).
-	glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(0));
-	glVertexAttribPointer(normalLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<const GLvoid*>(3 * sizeof(GLfloat)));
+	glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
 
 	m_vbo.release();
 	m_program->release();
 
 	// Init camera
-	m_camera.setEye({ 0.5, 10.0, 0.5 });
-	m_camera.setAt({ 0.5, 0.0, 0.5 });
-	m_camera.setUp({ 1.0, 0.0, 0.0 });
+	m_camera.setEye({ 0.0, 0.0, 10.0 });
+	m_camera.setAt({ 0.0, 0.0, 0.0 });
+	m_camera.setUp({ 0.0, 1.0, 0.0 });
 	m_camera.setFovy(45.0f);
 	m_camera.setAspectRatio(float(width()) / height());
 	m_camera.setNearPlane(0.01f);
@@ -190,36 +165,51 @@ void TerrainViewerWidget::paintGL()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	// Setup PVM and N matrices
-	QMatrix4x4 worldMatrix;
-	worldMatrix.translate(-m_terrain.height() / 2, 0.0, -m_terrain.width() / 2);
-	const auto normalMatrix = worldMatrix.normalMatrix();
-	const auto viewMatrix = m_camera.viewMatrix();
-	const auto projectionMatrix = m_camera.projectionMatrix();
-	const auto pvmMatrix = projectionMatrix * viewMatrix * worldMatrix;
+	if (m_numberPatches > 0)
+	{
+		// Setup PVM and N matrices
+		QMatrix4x4 worldMatrix;
+		worldMatrix.translate(-m_terrain.height() / 2, -m_terrain.width() / 2, 0.0);
+		// const auto normalMatrix = worldMatrix.normalMatrix();
+		const auto viewMatrix = m_camera.viewMatrix();
+		const auto projectionMatrix = m_camera.projectionMatrix();
+		// const auto pvmMatrix = projectionMatrix * viewMatrix * worldMatrix;
+		const QVector2D viewportSize(height(), width());
 
-	QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
-	m_program->bind();
+		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+		m_program->bind();
 
-	// Update PVM matrix
-	const int pvmMatrixLoc = m_program->uniformLocation("PVM");
-	m_program->setUniformValue(pvmMatrixLoc, pvmMatrix);
+		// Update P matrix
+		m_program->setUniformValue("P", projectionMatrix);
 
-	// Update M matrix
-	const int mMatrixLoc = m_program->uniformLocation("M");
-	m_program->setUniformValue(mMatrixLoc, worldMatrix);
+		// Update V matrix
+		m_program->setUniformValue("V", viewMatrix);
 
-	// Update N matrix
-	const int nMatrixLoc = m_program->uniformLocation("N");
-	m_program->setUniformValue(nMatrixLoc, normalMatrix);
+		// Update M matrix
+		m_program->setUniformValue("M", worldMatrix);
 
-	// Update max_altitude
-	const int maxAltitudeLoc = m_program->uniformLocation("max_altitude");
-	m_program->setUniformValue(maxAltitudeLoc, m_terrain.maxAltitude());
+		// Update viewportSize
+		m_program->setUniformValue("viewportSize", viewportSize);
 
-	glDrawArrays(GL_TRIANGLES, 0, m_numberVertices);
+		// Update terrain dimensions
+		m_program->setUniformValue("terrain_height", m_terrain.height());
+		m_program->setUniformValue("terrain_width", m_terrain.width());
+		m_program->setUniformValue("terrain_max_altitude", m_terrain.maxAltitude());
 
-	m_program->release();
+		// Bind the terrain texture
+		const auto textureUnit = 0;
+		m_program->setUniformValue("terrain", textureUnit);
+		m_terrainTexture.bind(textureUnit);
+
+		glPatchParameteri(GL_PATCH_VERTICES, 4);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glDrawArrays(GL_PATCHES, 0, 4 * m_numberPatches);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		m_program->release();
+
+		m_terrainTexture.release();
+	}
 }
 
 void TerrainViewerWidget::mousePressEvent(QMouseEvent* event)

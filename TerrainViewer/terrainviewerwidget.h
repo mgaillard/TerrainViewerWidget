@@ -3,10 +3,11 @@
 
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
-#include <QOpenGLFunctions_4_0_Core>
+#include <QOpenGLFunctions_4_3_Core>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLDebugLogger>
 #include <QOpenGLBuffer>
+#include <QOpenGLTexture>
 #include <QMatrix4x4>
 
 #include "camera.h"
@@ -14,7 +15,7 @@
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
-class TerrainViewerWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_0_Core
+class TerrainViewerWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
 	Q_OBJECT
 
@@ -44,27 +45,32 @@ protected:
 private:
 
 	/**
-	 * \brief A private type to temporarily store the data sent to OpenGL.
+	 * \brief A private type to temporarily store a vertex sent to OpenGL.
 	 */
 	struct Vertex
 	{
 		GLfloat x, y, z;
-		GLfloat nx, ny, nz;
+	};
 
-		void setVertex(const QVector3D& vertex)
-		{
-			x = vertex.x();
-			y = vertex.y();
-			z = vertex.z();
-		}
+	/**
+	 * \brief A private type to temporarily store a patch sent to OpenGL.
+	 */
+	struct Patch
+	{
+		Vertex v[4];
 
-		void setNormal(const QVector3D& normal)
+		Patch(const GLfloat x, const GLfloat y, const GLfloat sizeX, const GLfloat sizeY)
 		{
-			nx = normal.x();
-			ny = normal.y();
-			nz = normal.z();
+			v[0] = { x        , y        , 0.0 };
+			v[1] = { x + sizeX, y        , 0.0 };
+			v[2] = { x + sizeX, y + sizeY, 0.0 };
+			v[3] = { x        , y + sizeY, 0.0 };
 		}
 	};
+
+	int m_numberPatchesHeight;
+	int m_numberPatchesWidth;
+	GLsizei m_numberPatches;
 
 	QOpenGLDebugLogger* m_logger;
 	QOpenGLShaderProgram* m_program;
@@ -73,7 +79,7 @@ private:
 
 	QOpenGLVertexArrayObject m_vao;
 	QOpenGLBuffer m_vbo;
-	GLsizei m_numberVertices;
+	QOpenGLTexture m_terrainTexture;
 
 	TrackballCamera m_camera;
 };

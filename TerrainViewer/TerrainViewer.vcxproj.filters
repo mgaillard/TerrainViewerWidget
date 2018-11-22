@@ -74,6 +74,12 @@
     <None Include="Shaders\vertex_shader.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\tessellation_control.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\tessellation_evaluation.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
