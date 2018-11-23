@@ -1,6 +1,10 @@
 #version 430
-/*
-uniform float max_altitude;
+
+uniform float terrain_height;
+uniform float terrain_width;
+uniform int terrain_resolution_height;
+uniform int terrain_resolution_width;
+uniform float terrain_max_altitude;
 
 in vec3 position_world;
 in vec3 normal_world;
@@ -22,12 +26,12 @@ vec3 shading_diffuse()
 vec3 shading_texture()
 {
 	// Normalized altitude
-	float normalized_altitude = position_world.y / max_altitude;
+	float normalized_altitude = position_world.z / terrain_max_altitude;
 
 	// Height shading: color is a linear interpolation of height colors
 	vec3 color_altitude = mix(vec3(0.75, 0.725, 0.70), vec3(0.95, 0.925, 0.90), normalized_altitude);
 
-	float lambertian = max(0.0, dot(normal_world, normalize(vec3(1.0, 2.5, 0.5))));
+	float lambertian = max(0.0, dot(normal_world, normalize(vec3(1.0, 0.5, 2.5))));
 	lambertian = 0.5*(1.0 + lambertian); // Remap in [0, 1]
 	lambertian = lambertian*lambertian;
 
@@ -37,17 +41,17 @@ vec3 shading_texture()
 vec3 shading_guerin()
 {
 	// Normalized altitude
-	float normalized_altitude = position_world.y / max_altitude;
+	float normalized_altitude = position_world.z / terrain_max_altitude;
 
 	// Height shading: color is a linear interpolation of height colors
 	vec3 color_altitude = mix(vec3(0.75, 0.725, 0.70), vec3(0.95, 0.925, 0.90), normalized_altitude);
 
-	float lambertian = max(0.0, dot(normal_world, normalize(vec3(1.0, 2.5, 0.5))));
+	float lambertian = max(0.0, dot(normal_world, normalize(vec3(1.0, 0.5, 2.5))));
 	lambertian = 0.5*(1.0 + lambertian); // Remap in [0, 1]
 	lambertian = lambertian*lambertian;
 
 	// Normalized direction
-	float t = dot(normal_world.xz, normalize(vec2(1.0, 1.0)));
+	float t = dot(normal_world.xy, normalize(vec2(1.0, 1.0)));
 	t = 0.5*(1.0 + t); // Remap in [0, 1]
 	vec3 color_normal = lambertian*mix(vec3(0.65, 0.75, 0.85), vec3(1.0, 0.95, 0.8), t);
 
@@ -64,12 +68,4 @@ void main()
 {
 	vec3 color = shading_texture();
 	fragColor = vec4(color, 1.0);
-}
-*/
-
-out vec4 fragColor;
-
-void main()
-{
-	fragColor = vec4(0.0, 1.0, 0.0, 1.0);
 }

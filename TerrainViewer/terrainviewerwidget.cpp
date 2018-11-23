@@ -167,33 +167,35 @@ void TerrainViewerWidget::paintGL()
 
 	if (m_numberPatches > 0)
 	{
-		// Setup PVM and N matrices
+		// Setup matrices
 		QMatrix4x4 worldMatrix;
 		worldMatrix.translate(-m_terrain.height() / 2, -m_terrain.width() / 2, 0.0);
-		// const auto normalMatrix = worldMatrix.normalMatrix();
+		const auto normalMatrix = worldMatrix.normalMatrix();
 		const auto viewMatrix = m_camera.viewMatrix();
 		const auto projectionMatrix = m_camera.projectionMatrix();
-		// const auto pvmMatrix = projectionMatrix * viewMatrix * worldMatrix;
-		const QVector2D viewportSize(height(), width());
+		const auto pvMatrix = projectionMatrix * viewMatrix;
+		const auto pvmMatrix = pvMatrix * worldMatrix;
 
 		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 		m_program->bind();
 
-		// Update P matrix
+		// Update matrices
 		m_program->setUniformValue("P", projectionMatrix);
-
-		// Update V matrix
 		m_program->setUniformValue("V", viewMatrix);
-
-		// Update M matrix
 		m_program->setUniformValue("M", worldMatrix);
+		m_program->setUniformValue("N", normalMatrix);
+		m_program->setUniformValue("PV", pvMatrix);
+		m_program->setUniformValue("PVM", pvmMatrix);
 
 		// Update viewportSize
+		const QVector2D viewportSize(height(), width());
 		m_program->setUniformValue("viewportSize", viewportSize);
 
 		// Update terrain dimensions
 		m_program->setUniformValue("terrain_height", m_terrain.height());
 		m_program->setUniformValue("terrain_width", m_terrain.width());
+		m_program->setUniformValue("terrain_resolution_height", m_terrain.resolutionHeight());
+		m_program->setUniformValue("terrain_resolution_width", m_terrain.resolutionWidth());
 		m_program->setUniformValue("terrain_max_altitude", m_terrain.maxAltitude());
 
 		// Bind the terrain texture
@@ -201,10 +203,9 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("terrain", textureUnit);
 		m_terrainTexture.bind(textureUnit);
 
-		glPatchParameteri(GL_PATCH_VERTICES, 4);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glDrawArrays(GL_PATCHES, 0, 4 * m_numberPatches);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		const auto verticesPerPatch = 4;
+		glPatchParameteri(GL_PATCH_VERTICES, verticesPerPatch);
+		glDrawArrays(GL_PATCHES, 0, verticesPerPatch * m_numberPatches);
 
 		m_program->release();
 

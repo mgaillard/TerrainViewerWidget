@@ -3,7 +3,12 @@
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
+uniform mat3 N;
+uniform mat4 PV;
+uniform mat4 PVM;
+
 uniform vec2 viewportSize;
+
 uniform float pixelsPerTriangleEdge = 16.0;
 
 layout(vertices = 4) out;  //number of output verts of the tess. control shader
@@ -19,7 +24,7 @@ vec4 world(const vec4 vertex)
 // Project a vertex in world-space coordinates
 vec4 project(const vec4 vertex)
 {
-	const vec4 result = P * V * vertex;
+	const vec4 result = PV * vertex;
 	return result / result.w;
 }
 
@@ -39,7 +44,7 @@ float calc_tessellation_level(const vec4 v1, const vec4 v2)
 {
 	const float diameter = distance(v1, v2);
 	const vec4 mid_point = mix(v1, v2, 0.5);
-	const vec4 mid_point_clip = P * V * mid_point;
+	const vec4 mid_point_clip = PV * mid_point;
 	
 	// Diameter of the sphere on the screen
 	const float d = abs(diameter * P[1][1] / mid_point_clip.w);
