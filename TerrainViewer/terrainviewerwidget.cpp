@@ -113,7 +113,7 @@ void TerrainViewerWidget::initializeGL()
 
 	initializeOpenGLFunctions();
 	m_logger->initialize();
-	glClearColor(0.0, 0.0, 0.0, 1.0);	
+	glClearColor(0.5, 0.5, 0.5, 1.0);	
 
 	const auto posLoc = 0;
 
