@@ -183,18 +183,18 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("viewportSize", viewportSize);
 
 		// Update terrain dimensions in the shader
-		m_program->setUniformValue("terrain_height", m_terrain.height());
-		m_program->setUniformValue("terrain_width", m_terrain.width());
-		m_program->setUniformValue("terrain_resolution_height", m_terrain.resolutionHeight());
-		m_program->setUniformValue("terrain_resolution_width", m_terrain.resolutionWidth());
-		m_program->setUniformValue("terrain_max_altitude", m_terrain.maxAltitude());
+		m_program->setUniformValue("terrain.height", m_terrain.height());
+		m_program->setUniformValue("terrain.width", m_terrain.width());
+		m_program->setUniformValue("terrain.resolution_height", m_terrain.resolutionHeight());
+		m_program->setUniformValue("terrain.resolution_width", m_terrain.resolutionWidth());
+		m_program->setUniformValue("terrain.max_altitude", m_terrain.maxAltitude());
 
 		// Update pixelsPerTriangleEdge
 		m_program->setUniformValue("pixelsPerTriangleEdge", m_pixelsPerTriangleEdge);
 
 		// Bind the terrain texture
 		const auto textureUnit = 0;
-		m_program->setUniformValue("terrain", textureUnit);
+		m_program->setUniformValue("terrain.texture", textureUnit);
 		m_terrainTexture.bind(textureUnit);
 
 		const auto verticesPerPatch = 4;

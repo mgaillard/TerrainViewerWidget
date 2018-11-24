@@ -1,19 +1,17 @@
 #version 430
 
+const float maxTessellationLevel = 64.0;
+
 uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
 uniform mat3 N;
 uniform mat4 PV;
 uniform mat4 PVM;
-
 uniform vec2 viewportSize;
-
 uniform float pixelsPerTriangleEdge = 16.0;
 
 layout(vertices = 4) out;  //number of output verts of the tess. control shader
-
-const float maxTessellationLevel = 64.0;
 
 // Transform an object-space vertex in world-space coordinates
 vec4 world(const vec4 vertex)

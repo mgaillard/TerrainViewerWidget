@@ -1,10 +1,14 @@
 #version 430
 
-uniform float terrain_height;
-uniform float terrain_width;
-uniform int terrain_resolution_height;
-uniform int terrain_resolution_width;
-uniform float terrain_max_altitude;
+uniform struct Terrain
+{
+	sampler2D texture;
+	float height;
+	float width;
+	int resolution_height;
+	int resolution_width;
+	float max_altitude;
+} terrain;
 
 in vec3 position_world;
 in vec3 normal_world;
@@ -26,7 +30,7 @@ vec3 shading_diffuse()
 vec3 shading_texture()
 {
 	// Normalized altitude
-	float normalized_altitude = position_world.z / terrain_max_altitude;
+	float normalized_altitude = position_world.z / terrain.max_altitude;
 
 	// Height shading: color is a linear interpolation of height colors
 	vec3 color_altitude = mix(vec3(0.75, 0.725, 0.70), vec3(0.95, 0.925, 0.90), normalized_altitude);
@@ -41,7 +45,7 @@ vec3 shading_texture()
 vec3 shading_guerin()
 {
 	// Normalized altitude
-	float normalized_altitude = position_world.z / terrain_max_altitude;
+	float normalized_altitude = position_world.z / terrain.max_altitude;
 
 	// Height shading: color is a linear interpolation of height colors
 	vec3 color_altitude = mix(vec3(0.75, 0.725, 0.70), vec3(0.95, 0.925, 0.90), normalized_altitude);

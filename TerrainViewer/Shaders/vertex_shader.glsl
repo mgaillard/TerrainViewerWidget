@@ -1,19 +1,21 @@
 #version 430
 
-uniform float terrain_height;
-uniform float terrain_width;
-uniform int terrain_resolution_height;
-uniform int terrain_resolution_width;
-uniform float terrain_max_altitude;
-
-uniform sampler2D terrain;
+uniform struct Terrain
+{
+	sampler2D texture;
+	float height;
+	float width;
+	int resolution_height;
+	int resolution_width;
+	float max_altitude;
+} terrain;
 
 in vec3 pos_attrib;
 
 float height(const vec2 p)
 {
-	const vec2 texcoord = vec2(p.x / terrain_width, p.y / terrain_height);
-	return texture(terrain, texcoord).r;
+	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
+	return texture(terrain.texture, texcoord).r;
 }
 
 void main()
