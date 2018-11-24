@@ -33,6 +33,11 @@ public:
 public slots:
 	void cleanup();
 	void printInfo();
+
+	/**
+	 * \brief Load and display a terrain in the widget. The terrain cannot be empty.
+	 * \param terrain A non empty terrain.
+	 */
 	void loadTerrain(const Terrain& terrain);
 
 protected:
@@ -70,7 +75,20 @@ private:
 		}
 	};
 
+	/**
+	 * \brief Generate patches for the tessellation shader.
+	 * \param height Height of the terrain.
+	 * \param width Width of the terrain.
+	 * \param numberPatchesHeight Number of patches in the height axis.
+	 * \param numberPatchesWidth Number of patches in the width axis.
+	 * \return A vector of patches for the tessellation shader.
+	 */
 	static std::vector<Patch> generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth);
+
+	/**
+	 * \brief Initialize the texture storing the height of the terrain.
+	 */
+	void initTerrainTexture();
 
 	int m_numberPatchesHeight;
 	int m_numberPatchesWidth;

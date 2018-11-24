@@ -30,6 +30,12 @@ public:
 	bool loadFromImage(const cv::Mat& image);
 
 	/**
+	 * \brief Return true if the terrain contains no data, false otherwise
+	 * \return True if the terrain contains no data, false otherwise
+	 */
+	bool empty() const;
+
+	/**
 	 * \brief Return the width of the terrain 
 	 * \return The width of the terrain 
 	 */

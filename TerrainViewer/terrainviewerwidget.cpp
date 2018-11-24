@@ -50,17 +50,13 @@ void TerrainViewerWidget::printInfo()
 
 void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 {
+	assert(!terrain.empty());
+
 	m_terrain = terrain;
 
-	const auto height = m_terrain.resolutionHeight();
-	const auto width = m_terrain.resolutionWidth();
-
-	assert(height > 0);
-	assert(width > 0);
-
 	// Generate patches to match the terrain
-	m_numberPatchesHeight = height / 32;
-	m_numberPatchesWidth = width / 32;
+	m_numberPatchesHeight = m_terrain.resolutionHeight() / 32;
+	m_numberPatchesWidth = m_terrain.resolutionWidth() / 32;
 	m_numberPatches = m_numberPatchesWidth * m_numberPatchesHeight;
 	auto patches = generatePatches(m_terrain.height(), m_terrain.width(), m_numberPatchesHeight, m_numberPatchesWidth);
 
@@ -69,16 +65,8 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	m_vbo.allocate(patches.data(), patches.size() * sizeof(Patch));
 	m_vbo.release();
 	
-	// Init the texture to store the height of the terrain
-	m_terrainTexture.destroy();
-	m_terrainTexture.create();
-	m_terrainTexture.setFormat(QOpenGLTexture::R32F);
-	m_terrainTexture.setMinificationFilter(QOpenGLTexture::Linear);
-	m_terrainTexture.setMagnificationFilter(QOpenGLTexture::Linear);
-	m_terrainTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
-	m_terrainTexture.setSize(width, height);
-	m_terrainTexture.allocateStorage();
-	m_terrainTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
+	// Init the texture storing the height of the terrain
+	initTerrainTexture();
 
 	update();
 }
@@ -152,7 +140,6 @@ void TerrainViewerWidget::paintGL()
 		const auto pvMatrix = projectionMatrix * viewMatrix;
 		const auto pvmMatrix = pvMatrix * worldMatrix;
 
-		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 		m_program->bind();
 
 		// Update matrices
@@ -182,8 +169,11 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("terrain.texture", textureUnit);
 		m_terrainTexture.bind(textureUnit);
 
+		// Bind the VAO containing the patches
+		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
+
 		const auto verticesPerPatch = 4;
-		glPatchParameteri(GL_PATCH_VERTICES, verticesPerPatch);
+		m_program->setPatchVertexCount(verticesPerPatch);
 
 		if (m_wireFrame)
 		{
@@ -198,7 +188,6 @@ void TerrainViewerWidget::paintGL()
 		}
 
 		m_program->release();
-
 		m_terrainTexture.release();
 	}
 }
@@ -259,4 +248,17 @@ std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(flo
 	}
 
 	return patches;
+}
+
+void TerrainViewerWidget::initTerrainTexture()
+{
+	m_terrainTexture.destroy();
+	m_terrainTexture.create();
+	m_terrainTexture.setFormat(QOpenGLTexture::R32F);
+	m_terrainTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_terrainTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_terrainTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_terrainTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_terrainTexture.allocateStorage();
+	m_terrainTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
 }

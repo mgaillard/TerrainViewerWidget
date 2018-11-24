@@ -82,6 +82,11 @@ bool Terrain::loadFromImage(const cv::Mat& image)
 	return true;
 }
 
+bool Terrain::empty() const
+{
+	return (m_width == 0 || m_height == 0);
+}
+
 float Terrain::width() const
 {
 	return m_width;
