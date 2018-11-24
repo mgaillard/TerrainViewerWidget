@@ -194,8 +194,8 @@ void TerrainViewerWidget::paintGL()
 
 void TerrainViewerWidget::mousePressEvent(QMouseEvent* event)
 {
-	const int x = event->globalX();
-	const int y = event->globalY();
+	const auto x = event->globalX();
+	const auto y = event->globalY();
 
 	m_camera.mousePressed(x, y);
 
