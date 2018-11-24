@@ -99,9 +99,9 @@ void TerrainViewerWidget::initializeGL()
 	m_vbo.bind();
 
 	// Enable attributes
-	glEnableVertexAttribArray(posLoc);
+	m_program->enableAttributeArray(posLoc);
 	// Tell OpenGL how to get the attribute values out of the vbo (stride and offset).
-	glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLvoid*>(0));
+	m_program->setAttributeArray(posLoc, nullptr, 3, 0);
 
 	m_vbo.release();
 	m_program->release();
