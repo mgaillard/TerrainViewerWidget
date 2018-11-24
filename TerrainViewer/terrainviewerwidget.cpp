@@ -62,22 +62,7 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	m_numberPatchesHeight = height / 32;
 	m_numberPatchesWidth = width / 32;
 	m_numberPatches = m_numberPatchesWidth * m_numberPatchesHeight;
-
-	const auto patchSizeWidth = m_terrain.width() / m_numberPatchesWidth;
-	const auto patchSizeHeight = m_terrain.height() / m_numberPatchesHeight;
-
-	std::vector<Patch> patches;
-	patches.reserve(m_numberPatches);
-	for (int i = 0; i < m_numberPatchesHeight; i++)
-	{
-		for (int j = 0; j < m_numberPatchesWidth; j++)
-		{
-			const auto x = patchSizeHeight * i;
-			const auto y = patchSizeWidth * j;
-
-			patches.emplace_back(x, y, patchSizeHeight, patchSizeWidth);
-		}
-	}
+	auto patches = generatePatches(m_terrain.height(), m_terrain.width(), m_numberPatchesHeight, m_numberPatchesWidth);
 
 	// Update the vbo
 	m_vbo.bind();
@@ -252,4 +237,26 @@ void TerrainViewerWidget::wheelEvent(QWheelEvent* event)
 	m_camera.zoom(numSteps.y());
 
 	update();
+}
+
+std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth)
+{
+	const auto numberPatches = numberPatchesHeight * numberPatchesWidth;
+	const auto patchSizeHeight = height / numberPatchesHeight;
+	const auto patchSizeWidth = width / numberPatchesWidth;
+
+	std::vector<Patch> patches;
+	patches.reserve(numberPatches);
+	for (auto i = 0; i < numberPatchesHeight; i++)
+	{
+		for (auto j = 0; j < numberPatchesWidth; j++)
+		{
+			const auto x = patchSizeHeight * i;
+			const auto y = patchSizeWidth * j;
+
+			patches.emplace_back(x, y, patchSizeHeight, patchSizeWidth);
+		}
+	}
+
+	return patches;
 }

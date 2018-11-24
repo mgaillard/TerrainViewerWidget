@@ -70,6 +70,8 @@ private:
 		}
 	};
 
+	static std::vector<Patch> generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth);
+
 	int m_numberPatchesHeight;
 	int m_numberPatchesWidth;
 	GLsizei m_numberPatches;
