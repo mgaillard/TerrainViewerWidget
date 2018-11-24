@@ -72,6 +72,9 @@ private:
 	int m_numberPatchesWidth;
 	GLsizei m_numberPatches;
 
+	bool m_wireFrame;
+	float m_pixelsPerTriangleEdge;
+
 	QOpenGLDebugLogger* m_logger;
 	QOpenGLShaderProgram* m_program;
 

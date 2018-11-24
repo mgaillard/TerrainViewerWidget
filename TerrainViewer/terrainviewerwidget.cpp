@@ -12,6 +12,8 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_numberPatchesHeight(0),
 	m_numberPatchesWidth(0),
 	m_numberPatches(0),
+	m_wireFrame(false),
+	m_pixelsPerTriangleEdge(16.0),
 	m_logger(new QOpenGLDebugLogger(this)),
 	m_program(nullptr),
 	m_terrain(0.0f, 0.0f, 0.0f),
@@ -181,12 +183,15 @@ void TerrainViewerWidget::paintGL()
 		const QVector2D viewportSize(height(), width());
 		m_program->setUniformValue("viewportSize", viewportSize);
 
-		// Update terrain dimensions
+		// Update terrain dimensions in the shader
 		m_program->setUniformValue("terrain_height", m_terrain.height());
 		m_program->setUniformValue("terrain_width", m_terrain.width());
 		m_program->setUniformValue("terrain_resolution_height", m_terrain.resolutionHeight());
 		m_program->setUniformValue("terrain_resolution_width", m_terrain.resolutionWidth());
 		m_program->setUniformValue("terrain_max_altitude", m_terrain.maxAltitude());
+
+		// Update pixelsPerTriangleEdge
+		m_program->setUniformValue("pixelsPerTriangleEdge", m_pixelsPerTriangleEdge);
 
 		// Bind the terrain texture
 		const auto textureUnit = 0;
@@ -195,7 +200,18 @@ void TerrainViewerWidget::paintGL()
 
 		const auto verticesPerPatch = 4;
 		glPatchParameteri(GL_PATCH_VERTICES, verticesPerPatch);
+
+		if (m_wireFrame)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+
 		glDrawArrays(GL_PATCHES, 0, verticesPerPatch * m_numberPatches);
+		
+		if (m_wireFrame)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 
 		m_program->release();
 
