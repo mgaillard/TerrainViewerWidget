@@ -45,18 +45,6 @@ void TerrainViewerWidget::printInfo()
 	qDebug() << "Renderer: " << QString::fromLatin1(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 	qDebug() << "Version: " << QString::fromLatin1(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 	qDebug() << "GLSL Version: " << QString::fromLatin1(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
-
-	const auto messages = m_logger->loggedMessages();
-
-	if (!messages.empty())
-	{
-		qDebug() << "OpenGL Debug messages:";
-	}
-
-	for (const auto& message : messages)
-	{
-		qDebug() << message;
-	}
 }
 
 void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
