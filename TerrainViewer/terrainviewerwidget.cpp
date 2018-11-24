@@ -17,7 +17,8 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_logger(new QOpenGLDebugLogger(this)),
 	m_program(nullptr),
 	m_terrain(0.0f, 0.0f, 0.0f),
-	m_terrainTexture(QOpenGLTexture::Target2D),
+	m_heightTexture(QOpenGLTexture::Target2D),
+	m_normalTexture(QOpenGLTexture::Target2D),
 	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
 {
 }
@@ -34,7 +35,8 @@ void TerrainViewerWidget::cleanup()
 		makeCurrent();
 		m_vao.destroy();
 		m_vbo.destroy();
-		m_terrainTexture.destroy();
+		m_heightTexture.destroy();
+		m_normalTexture.destroy();
 		m_program.reset(nullptr);
 		doneCurrent();
 	}
@@ -164,10 +166,15 @@ void TerrainViewerWidget::paintGL()
 		// Update pixelsPerTriangleEdge
 		m_program->setUniformValue("pixelsPerTriangleEdge", m_pixelsPerTriangleEdge);
 
-		// Bind the terrain texture
-		const auto textureUnit = 0;
-		m_program->setUniformValue("terrain.texture", textureUnit);
-		m_terrainTexture.bind(textureUnit);
+		// Bind the height texture
+		const auto heightTextureUnit = 0;
+		m_program->setUniformValue("terrain.height_texture", heightTextureUnit);
+		m_heightTexture.bind(heightTextureUnit);
+
+		// Bind the normal texture
+		const auto normalTextureUnit = 1;
+		m_program->setUniformValue("terrain.normal_texture", normalTextureUnit);
+		m_normalTexture.bind(normalTextureUnit);
 
 		// Bind the VAO containing the patches
 		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
@@ -187,8 +194,9 @@ void TerrainViewerWidget::paintGL()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
+		m_normalTexture.release();
+		m_heightTexture.release();
 		m_program->release();
-		m_terrainTexture.release();
 	}
 }
 
@@ -252,13 +260,38 @@ std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(flo
 
 void TerrainViewerWidget::initTerrainTexture()
 {
-	m_terrainTexture.destroy();
-	m_terrainTexture.create();
-	m_terrainTexture.setFormat(QOpenGLTexture::R32F);
-	m_terrainTexture.setMinificationFilter(QOpenGLTexture::Linear);
-	m_terrainTexture.setMagnificationFilter(QOpenGLTexture::Linear);
-	m_terrainTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
-	m_terrainTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
-	m_terrainTexture.allocateStorage();
-	m_terrainTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
+	m_heightTexture.destroy();
+	m_heightTexture.create();
+	m_heightTexture.setFormat(QOpenGLTexture::R32F);
+	m_heightTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_heightTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_heightTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_heightTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_heightTexture.allocateStorage();
+	m_heightTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
+
+	// Compute normals
+	std::vector<QVector3D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
+
+#pragma omp parallel for
+	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
+	{
+		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
+		{
+			const auto index = i * m_terrain.resolutionWidth() + j;
+
+			normals[index] = m_terrain.normal(i, j);
+		}
+	}
+
+	m_normalTexture.destroy();
+	m_normalTexture.destroy();
+	m_normalTexture.create();
+	m_normalTexture.setFormat(QOpenGLTexture::RGB32F);
+	m_normalTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_normalTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_normalTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_normalTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_normalTexture.allocateStorage();
+	m_normalTexture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, normals.data());
 }

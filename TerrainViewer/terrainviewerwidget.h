@@ -104,7 +104,8 @@ private:
 
 	QOpenGLVertexArrayObject m_vao;
 	QOpenGLBuffer m_vbo;
-	QOpenGLTexture m_terrainTexture;
+	QOpenGLTexture m_heightTexture;
+	QOpenGLTexture m_normalTexture;
 
 	TrackballCamera m_camera;
 };

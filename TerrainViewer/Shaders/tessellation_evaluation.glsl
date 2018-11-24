@@ -9,7 +9,8 @@ uniform mat4 PVM;
 
 uniform struct Terrain
 {
-	sampler2D texture;
+	sampler2D height_texture;
+	sampler2D normal_texture;
 	float height;
 	float width;
 	int resolution_height;
@@ -25,17 +26,23 @@ out vec3 normal_world;
 float height(const vec2 p)
 {
 	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
-	return texture(terrain.texture, texcoord).r;
+	return texture(terrain.height_texture, texcoord).s;
 }
 
 vec3 normal(const vec2 p)
 {
 	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
+	return normalize(texture(terrain.normal_texture, texcoord).stp);
+}
 
-	const float left = textureOffset(terrain.texture, texcoord, ivec2(-1, 0)).r;
-	const float right = textureOffset(terrain.texture, texcoord, ivec2(1, 0)).r;
-	const float bottom = textureOffset(terrain.texture, texcoord, ivec2(0, -1)).r;
-	const float top = textureOffset(terrain.texture, texcoord, ivec2(0, 1)).r;
+vec3 compute_normal(const vec2 p)
+{
+	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
+
+	const float left = textureOffset(terrain.height_texture, texcoord, ivec2(-1, 0)).s;
+	const float right = textureOffset(terrain.height_texture, texcoord, ivec2(1, 0)).s;
+	const float bottom = textureOffset(terrain.height_texture, texcoord, ivec2(0, -1)).s;
+	const float top = textureOffset(terrain.height_texture, texcoord, ivec2(0, 1)).s;
 
 	const float step_width = terrain.width / (terrain.resolution_width - 1.0);
 	const float step_height = terrain.height / (terrain.resolution_height - 1.0);

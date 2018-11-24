@@ -2,7 +2,8 @@
 
 uniform struct Terrain
 {
-	sampler2D texture;
+	sampler2D height_texture;
+	sampler2D normal_texture;
 	float height;
 	float width;
 	int resolution_height;
@@ -15,7 +16,7 @@ in vec3 pos_attrib;
 float height(const vec2 p)
 {
 	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
-	return texture(terrain.texture, texcoord).r;
+	return texture(terrain.height_texture, texcoord).s;
 }
 
 void main()

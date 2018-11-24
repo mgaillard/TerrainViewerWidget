@@ -139,8 +139,8 @@ QVector3D Terrain::vertex(unsigned int i, unsigned int j) const
 	assert(m_resolutionWidth > 0);
 
 	const auto x = m_width * j / (m_resolutionWidth - 1);
-	const auto y = operator()(i, j);
-	const auto z = m_height * i / (m_resolutionHeight - 1);
+	const auto y = m_height * i / (m_resolutionHeight - 1);
+	const auto z = operator()(i, j);
 	
 	return { x, y, z };
 }
@@ -155,10 +155,10 @@ QVector3D Terrain::normal(unsigned int i, unsigned int j) const
 		const auto stepWidth = m_width / (m_resolutionWidth - 1);
 		const auto stepHeight = m_height / (m_resolutionHeight - 1);
 
-		const auto dw = (operator()(i, j + 1) - operator()(i, j - 1)) / (2 * stepWidth);
-		const auto dh = (operator()(i + 1, j) - operator()(i - 1, j)) / (2 * stepHeight);
+		const auto xDiff = (operator()(i, j + 1) - operator()(i, j - 1)) / (2 * stepWidth);
+		const auto yDiff = (operator()(i + 1, j) - operator()(i - 1, j)) / (2 * stepHeight);
 
-		return { -dw, 1.0f, -dh };
+		return { -xDiff, -yDiff, 1.0f };
 	}
 
 	return { 0.0f, 0.0f, 0.0f };

@@ -2,7 +2,8 @@
 
 uniform struct Terrain
 {
-	sampler2D texture;
+	sampler2D height_texture;
+	sampler2D normal_texture;
 	float height;
 	float width;
 	int resolution_height;
