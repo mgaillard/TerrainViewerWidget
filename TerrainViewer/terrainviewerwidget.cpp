@@ -30,7 +30,9 @@ void TerrainViewerWidget::cleanup()
 	if (m_program != nullptr)
 	{
 		makeCurrent();
+		m_vao.destroy();
 		m_vbo.destroy();
+		m_terrainTexture.destroy();
 		delete m_program;
 		m_program = nullptr;
 		doneCurrent();
