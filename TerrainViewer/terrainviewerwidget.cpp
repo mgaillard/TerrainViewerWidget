@@ -29,14 +29,13 @@ TerrainViewerWidget::~TerrainViewerWidget()
 
 void TerrainViewerWidget::cleanup()
 {
-	if (m_program != nullptr)
+	if (m_program)
 	{
 		makeCurrent();
 		m_vao.destroy();
 		m_vbo.destroy();
 		m_terrainTexture.destroy();
-		delete m_program;
-		m_program = nullptr;
+		m_program.reset(nullptr);
 		doneCurrent();
 	}
 }
@@ -109,7 +108,7 @@ void TerrainViewerWidget::initializeGL()
 
 	const auto posLoc = 0;
 
-	m_program = new QOpenGLShaderProgram;
+	m_program = std::make_unique<QOpenGLShaderProgram>();
 	m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/MainWindow/Shaders/vertex_shader.glsl");
 	m_program->addShaderFromSourceFile(QOpenGLShader::TessellationControl, ":/MainWindow/Shaders/tessellation_control.glsl");
 	m_program->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation, ":/MainWindow/Shaders/tessellation_evaluation.glsl");
@@ -157,7 +156,7 @@ void TerrainViewerWidget::paintGL()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnable(GL_DEPTH_TEST);
 
-	if (m_numberPatches > 0)
+	if (m_program && m_numberPatches > 0)
 	{
 		// Setup matrices
 		QMatrix4x4 worldMatrix;

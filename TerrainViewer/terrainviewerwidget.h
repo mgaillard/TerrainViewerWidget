@@ -1,6 +1,8 @@
 #ifndef TERRAINVIEWERWIDGET_H
 #define TERRAINVIEWERWIDGET_H
 
+#include <memory>
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_4_3_Core>
@@ -76,7 +78,7 @@ private:
 	float m_pixelsPerTriangleEdge;
 
 	QOpenGLDebugLogger* m_logger;
-	QOpenGLShaderProgram* m_program;
+	std::unique_ptr<QOpenGLShaderProgram> m_program;
 
 	Terrain m_terrain;
 
