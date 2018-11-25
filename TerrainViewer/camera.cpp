@@ -69,13 +69,15 @@ void Camera::setFarPlane(float farPlane)
 
 void Camera::roundLeftRight(float angle)
 {
+	// Rotation around z
 	QMatrix4x4 rotationMatrix;
-	rotationMatrix.rotate(angle, m_up);
+	rotationMatrix.rotate(angle, 0.0, 0.0, 1.0);
 	
 	const QVector3D atToEye(m_eye - m_at);
 	const QVector3D rotatedAtToEye = rotationMatrix * atToEye;
-
 	m_eye = m_at + rotatedAtToEye;
+
+	m_up = (rotationMatrix * m_up).normalized();
 }
 
 void Camera::roundUpDown(float angle)
