@@ -66,13 +66,13 @@ public:
 	 * \brief Return the terrain resolution on the width axis
 	 * \return The terrain resolution on the width axis
 	 */
-	unsigned int resolutionWidth() const;
+	int resolutionWidth() const;
 
 	/**
 	 * \brief Return the terrain resolution on the height axis
 	 * \return The terrain resolution on the height axis
 	 */
-	unsigned int resolutionHeight() const;
+	int resolutionHeight() const;
 
 	/**
 	 * \brief Get access to the altitude of a vertex
@@ -80,7 +80,7 @@ public:
 	 * \param j Vertex X coordinate (width axis)
 	 * \return The altitude of the vertex
 	 */
-	const float& operator()(unsigned int i, unsigned int j) const;
+	const float& operator()(int i, int j) const;
 	
 	/**
 	 * \brief Get access to the altitude of a vertex
@@ -88,7 +88,7 @@ public:
 	 * \param j Vertex X coordinate (width axis)
 	 * \return The altitude of the vertex
 	 */
-	float& operator()(unsigned int i, unsigned int j);
+	float& operator()(int i, int j);
 
 	/**
 	 * \brief Return the 3D point of a vertex
@@ -96,7 +96,7 @@ public:
 	 * \param j Vertex X coordinate (width axis)
 	 * \return The 3D point of a vertex
 	 */
-	QVector3D vertex(unsigned int i, unsigned int j) const;
+	QVector3D vertex(int i, int j) const;
 
 	/**
 	 * \brief Return the normal vector of a vertex
@@ -104,15 +104,15 @@ public:
 	 * \param j Vertex X coordinate (width axis)
 	 * \return The normal vector of a vertex
 	 */
-	QVector3D normal(unsigned int i, unsigned int j) const;
+	QVector3D normal(int i, int j) const;
 
 private:
 	float m_width;
 	float m_height;
 	float m_maxAltitude;
 
-	unsigned int m_resolutionWidth;
-	unsigned int m_resolutionHeight;
+	int m_resolutionWidth;
+	int m_resolutionHeight;
 
 	std::vector<float> m_data;
 };

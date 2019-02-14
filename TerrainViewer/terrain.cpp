@@ -25,9 +25,9 @@ bool Terrain::loadFromImage(const QImage& image)
 
 	m_data.resize(m_resolutionHeight * m_resolutionWidth, 0.0f);
 
-	for (unsigned int i = 0; i < m_resolutionHeight; i++)
+	for (int i = 0; i < m_resolutionHeight; i++)
 	{
-		for (unsigned int j = 0; j < m_resolutionWidth; j++)
+		for (int j = 0; j < m_resolutionWidth; j++)
 		{
 			operator()(i, j) = (static_cast<float>(qGray(image.pixel(i, j))) / 255) * m_maxAltitude;
 		}
@@ -56,14 +56,14 @@ bool Terrain::loadFromImage(const cv::Mat& image)
 		return false;
 	}
 
-	m_resolutionHeight = static_cast<unsigned int >(image.rows);
-	m_resolutionWidth = static_cast<unsigned int>(image.cols);
+	m_resolutionHeight = image.rows;
+	m_resolutionWidth = image.cols;
 
 	m_data.resize(m_resolutionHeight * m_resolutionWidth, 0.0f);
 
-	for (unsigned int i = 0; i < m_resolutionHeight; i++)
+	for (int i = 0; i < m_resolutionHeight; i++)
 	{
-		for (unsigned int j = 0; j < m_resolutionWidth; j++)
+		for (int j = 0; j < m_resolutionWidth; j++)
 		{
 			float normalizedValue = 0.0f;
 
@@ -109,33 +109,33 @@ const float* Terrain::data() const
 	return m_data.data();
 }
 
-unsigned int Terrain::resolutionWidth() const
+int Terrain::resolutionWidth() const
 {
 	return m_resolutionWidth;
 }
 
-unsigned int Terrain::resolutionHeight() const
+int Terrain::resolutionHeight() const
 {
 	return m_resolutionHeight;
 }
 
-const float& Terrain::operator()(unsigned int i, unsigned int j) const
+const float& Terrain::operator()(int i, int j) const
 {
-	assert(i < m_resolutionHeight);
-	assert(j < m_resolutionWidth);
+	assert(i >= 0 && i < m_resolutionHeight);
+	assert(j >= 0 && j < m_resolutionWidth);
 
 	return m_data[i * m_resolutionWidth + j];
 }
 
-float& Terrain::operator()(unsigned int i, unsigned int j)
+float& Terrain::operator()(int i, int j)
 {
-	assert(i < m_resolutionHeight);
-	assert(j < m_resolutionWidth);
+	assert(i >= 0 && i < m_resolutionHeight);
+	assert(j >= 0 && j < m_resolutionWidth);
 
 	return m_data[i * m_resolutionWidth + j];
 }
 
-QVector3D Terrain::vertex(unsigned int i, unsigned int j) const
+QVector3D Terrain::vertex(int i, int j) const
 {
 	assert(m_resolutionHeight > 0);
 	assert(m_resolutionWidth > 0);
@@ -147,7 +147,7 @@ QVector3D Terrain::vertex(unsigned int i, unsigned int j) const
 	return { x, y, z };
 }
 
-QVector3D Terrain::normal(unsigned int i, unsigned int j) const
+QVector3D Terrain::normal(int i, int j) const
 {
 	assert(m_resolutionHeight > 0);
 	assert(m_resolutionWidth > 0);
@@ -164,4 +164,23 @@ QVector3D Terrain::normal(unsigned int i, unsigned int j) const
 	}
 
 	return { 0.0f, 0.0f, 0.0f };
+}
+
+std::vector<float> ambientOcclusion(const Terrain& terrain)
+{
+	const unsigned int height = terrain.resolutionHeight();
+	const unsigned int width = terrain.resolutionWidth();
+
+	std::vector<float> illumination(height * width, 0.0f);
+
+	for (unsigned int i = 0; i < height; i++)
+	{
+		for (unsigned int j = 0; j < width; j++)
+		{
+			// Compute the horizon in this point for a direction k
+			// terrain(i, j);
+		}
+	}
+
+	return illumination;
 }
