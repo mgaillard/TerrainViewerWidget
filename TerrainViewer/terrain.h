@@ -10,6 +10,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+namespace TerrainViewer
+{
+
 class Terrain
 {
 public:
@@ -113,5 +116,7 @@ private:
 
 	std::vector<float> m_data;
 };
+
+}
 
 #endif // TERRAIN_H

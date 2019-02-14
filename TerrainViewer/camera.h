@@ -4,6 +4,9 @@
 #include <QVector3D>
 #include <QMatrix4x4>
 
+namespace TerrainViewer
+{
+
 class Camera
 {
 public:
@@ -163,4 +166,5 @@ private:
 	int m_y0;
 };
 
+}
 #endif // CAMERA_H

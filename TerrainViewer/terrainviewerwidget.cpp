@@ -7,6 +7,8 @@
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 
+using namespace TerrainViewer;
+
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	QOpenGLWidget(parent),
 	m_numberPatchesHeight(0),

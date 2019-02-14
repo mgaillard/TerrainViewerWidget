@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+using namespace TerrainViewer;
+
 Terrain::Terrain(float width, float height, float maxAltitude) :
 	m_width(width),
 	m_height(height),

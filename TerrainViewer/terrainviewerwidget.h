@@ -17,6 +17,9 @@
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
+namespace TerrainViewer
+{
+
 class TerrainViewerWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_3_Core
 {
 	Q_OBJECT
@@ -109,5 +112,7 @@ private:
 
 	TrackballCamera m_camera;
 };
+
+}
 
 #endif // TERRAINVIEWERWIDGET_H

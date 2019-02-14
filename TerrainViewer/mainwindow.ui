@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="TerrainViewerWidget" name="terrainViewerWidget"/>
+     <widget class="TerrainViewer::TerrainViewerWidget" name="terrainViewerWidget"/>
     </item>
    </layout>
   </widget>
@@ -55,7 +55,7 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>TerrainViewerWidget</class>
+   <class>TerrainViewer::TerrainViewerWidget</class>
    <extends>QOpenGLWidget</extends>
    <header>terrainviewerwidget.h</header>
   </customwidget>

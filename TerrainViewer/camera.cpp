@@ -1,5 +1,7 @@
 ﻿#include "camera.h"
 
+using namespace TerrainViewer;
+
 Camera::Camera(const QVector3D& eye,
 			   const QVector3D& at,
 			   const QVector3D& up,
