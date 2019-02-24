@@ -119,4 +119,8 @@ private:
 
 }
 
+// Experimental
+float horizonAngle(const TerrainViewer::Terrain& terrain, int i, int j, int di, int dj);
+std::vector<float> ambientOcclusion(const TerrainViewer::Terrain& terrain);
+
 #endif // TERRAIN_H

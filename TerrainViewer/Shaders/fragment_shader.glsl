@@ -4,6 +4,7 @@ uniform struct Terrain
 {
 	sampler2D height_texture;
 	sampler2D normal_texture;
+	sampler2D lightMap_texture;
 	float height;
 	float width;
 	int resolution_height;
@@ -11,66 +12,63 @@ uniform struct Terrain
 	float max_altitude;
 } terrain;
 
+in vec3 position_model;
 in vec3 position_world;
 in vec3 normal_world;
 
 out vec4 fragColor;
 
-vec3 shading_diffuse()
+// Elevation color ramp with t in [0, 1]
+vec3 elevation_ramp(const float t)
 {
-	vec3 ambient_color = vec3(0.95, 0.95, 0.95);
-	vec3 diffuse_color = vec3(0.95, 0.95, 0.95);
-	vec3 light_direction = normalize(vec3(1.0, 1.0, 1.0));
+	const float offset[6] = float[](
+		0.0,
+		0.125,
+		0.25,
+		0.5,
+		0.75,
+		1.0
+	);
+	
+	// Gradient name: "DEM screen"
+	// Source: http://soliton.vm.bytemark.co.uk/pub/cpt-city/views/totp-svg.html
+	const vec3 color[6] = vec3[](
+		vec3(0, 132, 53) / 255.0,
+		vec3(51, 204, 0) / 255.0,
+		vec3(244, 240, 113) / 255.0,
+		vec3(244, 189, 69) / 255.0,
+		vec3(153, 100, 43) / 255.0,
+		vec3(255, 255, 255) / 255.0
+	);
+	
+	for (int i = 0; i < 5; i++)
+	{
+		if (t >= offset[i] && t < offset[i + 1])
+		{
+			const float s = (t - offset[i]) / (offset[i + 1] - offset[i]);
+			return mix(color[i], color[i + 1], s);
+		}
+	}
 
-	vec3 ambient_term = 0.1 * ambient_color;
-	vec3 diffuse_term = 0.9 * diffuse_color * max(0.0, dot(normal_world, light_direction));
-
-	return ambient_term + diffuse_term;
+	return color[5];
 }
 
-vec3 shading_texture()
+vec3 shading_occlusion()
 {
+	// Occlusion
+	const vec2 texcoord = vec2(position_model.x / terrain.width, position_model.y / terrain.height);
+	const float occlusion = texture(terrain.lightMap_texture, texcoord).s;
+
 	// Normalized altitude
-	float normalized_altitude = position_world.z / terrain.max_altitude;
+	const float normalized_altitude = position_model.z / terrain.max_altitude;
+	const vec3 color = elevation_ramp(normalized_altitude);
 
-	// Height shading: color is a linear interpolation of height colors
-	vec3 color_altitude = mix(vec3(0.75, 0.725, 0.70), vec3(0.95, 0.925, 0.90), normalized_altitude);
-
-	float lambertian = max(0.0, dot(normal_world, normalize(vec3(1.0, 0.5, 2.5))));
-	lambertian = 0.5*(1.0 + lambertian); // Remap in [0, 1]
-	lambertian = lambertian*lambertian;
-
-	return color_altitude*(1.0 + lambertian)/2.0;
-}
-
-vec3 shading_guerin()
-{
-	// Normalized altitude
-	float normalized_altitude = position_world.z / terrain.max_altitude;
-
-	// Height shading: color is a linear interpolation of height colors
-	vec3 color_altitude = mix(vec3(0.75, 0.725, 0.70), vec3(0.95, 0.925, 0.90), normalized_altitude);
-
-	float lambertian = max(0.0, dot(normal_world, normalize(vec3(1.0, 0.5, 2.5))));
-	lambertian = 0.5*(1.0 + lambertian); // Remap in [0, 1]
-	lambertian = lambertian*lambertian;
-
-	// Normalized direction
-	float t = dot(normal_world.xy, normalize(vec2(1.0, 1.0)));
-	t = 0.5*(1.0 + t); // Remap in [0, 1]
-	vec3 color_normal = lambertian*mix(vec3(0.65, 0.75, 0.85), vec3(1.0, 0.95, 0.8), t);
-
-	// GPUTerrainViewer version
-	vec3 color = 0.1*vec3(0.95, 0.95, 0.95) + 0.8*color_normal + 0.1*color_altitude;
-
-	// LibCore version
-	// vec3 color = 0.25*vec3(0.975, 0.975, 0.975) + 0.50*color_normal + 0.25*color_altitude;
-
-	return color;
+	return color * occlusion;
 }
 
 void main()
 {
-	vec3 color = shading_texture();
+	// TODO: Let the user choose between color and grayscale
+	vec3 color = shading_occlusion();
 	fragColor = vec4(color, 1.0);
 }

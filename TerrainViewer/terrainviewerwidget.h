@@ -92,6 +92,8 @@ private:
 	 * \brief Initialize the texture storing the height of the terrain.
 	 */
 	void initTerrainTexture();
+	void initNormalTexture();
+	void initLightMapTexture();
 
 	int m_numberPatchesHeight;
 	int m_numberPatchesWidth;
@@ -109,6 +111,7 @@ private:
 	QOpenGLBuffer m_vbo;
 	QOpenGLTexture m_heightTexture;
 	QOpenGLTexture m_normalTexture;
+	QOpenGLTexture m_lightMapTexture;
 
 	TrackballCamera m_camera;
 };

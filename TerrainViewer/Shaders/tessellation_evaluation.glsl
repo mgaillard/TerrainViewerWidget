@@ -11,6 +11,7 @@ uniform struct Terrain
 {
 	sampler2D height_texture;
 	sampler2D normal_texture;
+	sampler2D lightMap_texture;
 	float height;
 	float width;
 	int resolution_height;
@@ -20,6 +21,7 @@ uniform struct Terrain
 
 layout (quads, fractional_odd_spacing, ccw) in;
 
+out vec3 position_model;
 out vec3 position_world;
 out vec3 normal_world;
 
@@ -73,6 +75,7 @@ void main()
 
 	gl_Position = PVM * p;
 
+	position_model = vec3(p);
 	position_world = vec3(M * p);
 	normal_world = normalize(N * normal(p.xy));
 }

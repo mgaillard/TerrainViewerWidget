@@ -1,5 +1,7 @@
 ﻿#include "terrain.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h>
 #include <cassert>
 
 using namespace TerrainViewer;
@@ -163,24 +165,81 @@ QVector3D Terrain::normal(int i, int j) const
 		return { -xDiff, -yDiff, 1.0f };
 	}
 
-	return { 0.0f, 0.0f, 0.0f };
+	return { 0.0f, 0.0f, 1.0f };
+}
+
+// TODO: Implement a more efficient algorithm
+// Sean Barrett, 2011-12-25
+// http://nothings.org/gamedev/horizon/
+// Heman library on Github
+// https://github.com/prideout/heman
+// Timonen, V., &Westerholm, J. (2010, May).Scalable Height Field Self‐Shadowing.
+// In Computer Graphics Forum(Vol. 29, No. 2, pp. 723 - 731).Oxford, UK: Blackwell Publishing Ltd.
+// http://wili.cc/research/hfshadow/hfshadow.pdf
+float horizonAngle(const TerrainViewer::Terrain& terrain, int i, int j, int di, int dj)
+{
+	const int height = terrain.resolutionHeight();
+	const int width = terrain.resolutionWidth();
+
+	// Horizon angle for this point
+	float horizonTan = 0.0;
+
+	// Compute the horizon in this point for a direction (dx, dy)
+	for (int k = i + di, l = j + dj; k >= 0 && k < height && l>= 0 && l < width; k += di, l += dj)
+	{
+		// Altitude difference
+		const float dh = terrain(k, l) - terrain(i, j);
+		// Distance between the two points
+		const float d = std::sqrt((k - i)*(k - i) + (l - j)*(l - j));
+		// Horizon angle to this point
+		const float angle = dh / d;
+
+		horizonTan = std::max(angle, horizonTan);
+	}
+
+	return M_PI_2 - std::atan(horizonTan);
 }
 
 std::vector<float> ambientOcclusion(const Terrain& terrain)
 {
-	const unsigned int height = terrain.resolutionHeight();
-	const unsigned int width = terrain.resolutionWidth();
+	const int height = terrain.resolutionHeight();
+	const int width = terrain.resolutionWidth();
 
-	std::vector<float> illumination(height * width, 0.0f);
-
-	for (unsigned int i = 0; i < height; i++)
+	const std::array<std::pair<int, int>, 16> directions = {
 	{
-		for (unsigned int j = 0; j < width; j++)
+		{ 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 },   // 4-connected neighborhood
+		{ 1, 1 }, { -1, 1 }, { -1, -1 }, { 1, -1 }, // Diagonals
+		{ 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1 }, // Knight in chess
+		{ 1, 2 }, { 1, -2 }, { -1, 2 }, { -1, -2 }
+	} };
+
+	std::vector<float> occlusion(height * width, 0.0f);
+
+#pragma omp parallel for
+	for (int i = 0; i < height; i++)
+	{
+		for (int j = 0; j < width; j++)
 		{
-			// Compute the horizon in this point for a direction k
-			// terrain(i, j);
+			for (const auto& direction : directions)
+			{
+				// Angle between 0 and pi/2
+				const float angle = horizonAngle(terrain, i, j, direction.first, direction.second);
+
+				// Percentage of the surface of the hemisphere that is accessible by ambient light.
+				occlusion[i * width + j] += angle / (directions.size() * M_PI_2);
+			}
 		}
 	}
 
-	return illumination;
+	// Remap between 0 and 1.
+	// TODO: Let the user choose the mapping
+	const auto itMinMax = std::minmax_element(occlusion.begin(), occlusion.end());
+	const float minimum = *itMinMax.first;
+	const float maximum = *itMinMax.second; // Should be about 1.0
+	for (unsigned int i = 0; i < occlusion.size(); i++)
+	{
+		occlusion[i] = (occlusion[i] - minimum) / (maximum - minimum);
+	}
+
+	return occlusion;
 }

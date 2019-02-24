@@ -25,6 +25,7 @@ void MainWindow::loadFile()
 	if (QFileInfo::exists(fileName))
 	{
 		const auto image = cv::imread(fileName.toStdString(), cv::ImreadModes::IMREAD_ANYDEPTH);
+		// TODO: Let the user choose the dimensions
 		TerrainViewer::Terrain terrain(10.0f, 10.0f, 1.0f);
 		if (terrain.loadFromImage(image))
 		{

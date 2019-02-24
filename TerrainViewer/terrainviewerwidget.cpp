@@ -21,6 +21,7 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_terrain(0.0f, 0.0f, 0.0f),
 	m_heightTexture(QOpenGLTexture::Target2D),
 	m_normalTexture(QOpenGLTexture::Target2D),
+	m_lightMapTexture(QOpenGLTexture::Target2D),
 	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
 {
 }
@@ -39,6 +40,7 @@ void TerrainViewerWidget::cleanup()
 		m_vbo.destroy();
 		m_heightTexture.destroy();
 		m_normalTexture.destroy();
+		m_lightMapTexture.destroy();
 		m_program.reset(nullptr);
 		doneCurrent();
 	}
@@ -69,8 +71,10 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	m_vbo.allocate(patches.data(), patches.size() * sizeof(Patch));
 	m_vbo.release();
 	
-	// Init the texture storing the height of the terrain
+	// Init the textures storing the information of the terrain
 	initTerrainTexture();
+	initNormalTexture();
+	initLightMapTexture();
 
 	update();
 }
@@ -178,6 +182,11 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("terrain.normal_texture", normalTextureUnit);
 		m_normalTexture.bind(normalTextureUnit);
 
+		// Bind the light-map texture
+		const auto lightMapTextureUnit = 2;
+		m_program->setUniformValue("terrain.lightMap_texture", lightMapTextureUnit);
+		m_lightMapTexture.bind(lightMapTextureUnit);
+
 		// Bind the VAO containing the patches
 		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
@@ -196,6 +205,7 @@ void TerrainViewerWidget::paintGL()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
+		m_lightMapTexture.release();
 		m_normalTexture.release();
 		m_heightTexture.release();
 		m_program->release();
@@ -271,7 +281,10 @@ void TerrainViewerWidget::initTerrainTexture()
 	m_heightTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_heightTexture.allocateStorage();
 	m_heightTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
+}
 
+void TerrainViewerWidget::initNormalTexture()
+{
 	// Compute normals
 	std::vector<QVector3D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
 
@@ -296,4 +309,20 @@ void TerrainViewerWidget::initTerrainTexture()
 	m_normalTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_normalTexture.allocateStorage();
 	m_normalTexture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, normals.data());
+}
+
+void TerrainViewerWidget::initLightMapTexture()
+{
+	const std::vector<float> lightMap = ambientOcclusion(m_terrain);
+
+	m_lightMapTexture.destroy();
+	m_lightMapTexture.destroy();
+	m_lightMapTexture.create();
+	m_lightMapTexture.setFormat(QOpenGLTexture::R32F);
+	m_lightMapTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_lightMapTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_lightMapTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_lightMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_lightMapTexture.allocateStorage();
+	m_lightMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, lightMap.data());
 }
