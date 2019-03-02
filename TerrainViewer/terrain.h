@@ -19,6 +19,8 @@ public:
 
 	Terrain(float width, float height, float maxAltitude);
 
+	Terrain(float width, float height, float maxAltitude, int resolutionWidth, int resolutionHeight, std::vector<float> data);
+
 	/**
 	 * \brief Load a terrain from an image
 	 * \param image A QImage containing the height map
@@ -31,6 +33,20 @@ public:
 	 * \param image A cv::Mat image containing the height map
 	 */
 	bool loadFromImage(const cv::Mat& image);
+
+	/**
+	 * \brief Save the height-map in a grayscale 8 bits file
+	 * \param filename Name of the file
+	 * \return True if successfully saved, false otherwise
+	 */
+	bool saveInGrayscale8(const std::string& filename);
+
+	/**
+	 * \brief Save the height-map in a grayscale 16 bits file
+	 * \param filename Name of the file
+	 * \return True if successfully saved, false otherwise
+	 */
+	bool saveInGrayscale16(const std::string& filename);
 
 	/**
 	 * \brief Return true if the terrain contains no data, false otherwise
@@ -49,6 +65,18 @@ public:
 	 * \return The height of the terrain
 	 */
 	float height() const;
+
+	/**
+	 * \brief Return the width of a cell in the terrain
+	 * \return The width of a cell in the terrain
+	 */
+	float cellWidth() const;
+
+	/**
+	 * \brief Return the height of a cell in the terrain
+	 * \return The height of a cell in the terrain
+	 */
+	float cellHeight() const;
 
 	/**
 	 * \brief Return the terrain max altitude
@@ -91,6 +119,22 @@ public:
 	float& operator()(int i, int j);
 
 	/**
+	 * \brief Get access to the altitude of a vertex. Clamp to edge
+	 * \param i Vertex Y coordinate (height axis)
+	 * \param j Vertex X coordinate (width axis)
+	 * \return The altitude of the vertex
+	 */
+	const float& atClamp(int i, int j) const;
+
+	/**
+	 * \brief Get access to the altitude of a vertex. Clamp to edge
+	 * \param i Vertex Y coordinate (height axis)
+	 * \param j Vertex X coordinate (width axis)
+	 * \return The altitude of the vertex
+	 */
+	float& atClamp(int i, int j);
+
+	/**
 	 * \brief Return the 3D point of a vertex
 	 * \param i Vertex Y coordinate (height axis)
 	 * \param j Vertex X coordinate (width axis)
@@ -118,9 +162,5 @@ private:
 };
 
 }
-
-// Experimental
-float horizonAngle(const TerrainViewer::Terrain& terrain, int i, int j, int di, int dj);
-std::vector<float> ambientOcclusion(const TerrainViewer::Terrain& terrain);
 
 #endif // TERRAIN_H

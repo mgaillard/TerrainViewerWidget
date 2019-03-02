@@ -1,8 +1,8 @@
 ﻿#include "terrain.h"
 
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include <cassert>
+
+#include "utils.h"
 
 using namespace TerrainViewer;
 
@@ -13,6 +13,17 @@ Terrain::Terrain(float width, float height, float maxAltitude) :
 	m_resolutionWidth(0),
 	m_resolutionHeight(0)
 {
+}
+
+Terrain::Terrain(float width, float height, float maxAltitude, int resolutionWidth, int resolutionHeight, std::vector<float> data) :
+	m_width(width),
+	m_height(height),
+	m_maxAltitude(maxAltitude),
+	m_resolutionWidth(resolutionWidth),
+	m_resolutionHeight(resolutionHeight),
+	m_data(std::move(data))
+{
+	assert(m_data.size() == m_resolutionHeight * m_resolutionWidth);
 }
 
 bool Terrain::loadFromImage(const QImage& image)
@@ -86,6 +97,42 @@ bool Terrain::loadFromImage(const cv::Mat& image)
 	return true;
 }
 
+bool Terrain::saveInGrayscale8(const std::string& filename)
+{
+	cv::Mat image(m_resolutionHeight, m_resolutionWidth, CV_8U);
+
+	for (int i = 0; i < m_resolutionHeight; i++) {
+		for (int j = 0; j < m_resolutionWidth; j++) {
+			// Remap the value between 0 and 255
+			const double value = remap(operator()(i, j), 0.f, m_maxAltitude,
+									   static_cast<float>(std::numeric_limits<uint8_t>::lowest()),
+									   static_cast<float>(std::numeric_limits<uint8_t>::max()));
+			const auto color = static_cast<uint8_t>(value);
+			image.at<unsigned char>(i, j) = color;
+		}
+	}
+
+	return cv::imwrite(filename, image);
+}
+
+bool Terrain::saveInGrayscale16(const std::string& filename)
+{
+	cv::Mat image(m_resolutionHeight, m_resolutionWidth, CV_16U);
+
+	for (int i = 0; i < m_resolutionHeight; i++) {
+		for (int j = 0; j < m_resolutionWidth; j++) {
+			// Remap the value between 0 and 65535
+			const double value = remap(operator()(i, j), 0.f, m_maxAltitude,
+									   static_cast<float>(std::numeric_limits<uint16_t>::lowest()),
+									   static_cast<float>(std::numeric_limits<uint16_t>::max()));
+			const auto color = static_cast<uint16_t>(value);
+			image.at<unsigned short>(i, j) = color;
+		}
+	}
+
+	return cv::imwrite(filename, image);
+}
+
 bool Terrain::empty() const
 {
 	return (m_width == 0 || m_height == 0);
@@ -99,6 +146,16 @@ float Terrain::width() const
 float Terrain::height() const
 {
 	return m_height;
+}
+
+float Terrain::cellWidth() const
+{
+	return m_width / m_resolutionWidth;
+}
+
+float Terrain::cellHeight() const
+{
+	return m_height / m_resolutionHeight;
 }
 
 float Terrain::maxAltitude() const
@@ -137,6 +194,22 @@ float& Terrain::operator()(int i, int j)
 	return m_data[i * m_resolutionWidth + j];
 }
 
+const float& Terrain::atClamp(int i, int j) const
+{
+	const int k = clamp(i, 0, m_resolutionHeight - 1);
+	const int l = clamp(j, 0, m_resolutionWidth - 1);
+
+	return m_data[k * m_resolutionWidth + l];
+}
+
+float& Terrain::atClamp(int i, int j)
+{
+	const int k = clamp(i, 0, m_resolutionHeight - 1);
+	const int l = clamp(j, 0, m_resolutionWidth - 1);
+
+	return m_data[k * m_resolutionWidth + l];
+}
+
 QVector3D Terrain::vertex(int i, int j) const
 {
 	assert(m_resolutionHeight > 0);
@@ -166,80 +239,4 @@ QVector3D Terrain::normal(int i, int j) const
 	}
 
 	return { 0.0f, 0.0f, 1.0f };
-}
-
-// TODO: Implement a more efficient algorithm
-// Sean Barrett, 2011-12-25
-// http://nothings.org/gamedev/horizon/
-// Heman library on Github
-// https://github.com/prideout/heman
-// Timonen, V., &Westerholm, J. (2010, May).Scalable Height Field Self‐Shadowing.
-// In Computer Graphics Forum(Vol. 29, No. 2, pp. 723 - 731).Oxford, UK: Blackwell Publishing Ltd.
-// http://wili.cc/research/hfshadow/hfshadow.pdf
-float horizonAngle(const TerrainViewer::Terrain& terrain, int i, int j, int di, int dj)
-{
-	const int height = terrain.resolutionHeight();
-	const int width = terrain.resolutionWidth();
-
-	// Horizon angle for this point
-	float horizonTan = 0.0;
-
-	// Compute the horizon in this point for a direction (dx, dy)
-	for (int k = i + di, l = j + dj; k >= 0 && k < height && l>= 0 && l < width; k += di, l += dj)
-	{
-		// Altitude difference
-		const float dh = terrain(k, l) - terrain(i, j);
-		// Distance between the two points
-		const float d = std::sqrt((k - i)*(k - i) + (l - j)*(l - j));
-		// Horizon angle to this point
-		const float angle = dh / d;
-
-		horizonTan = std::max(angle, horizonTan);
-	}
-
-	return M_PI_2 - std::atan(horizonTan);
-}
-
-std::vector<float> ambientOcclusion(const Terrain& terrain)
-{
-	const int height = terrain.resolutionHeight();
-	const int width = terrain.resolutionWidth();
-
-	const std::array<std::pair<int, int>, 16> directions = {
-	{
-		{ 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 },   // 4-connected neighborhood
-		{ 1, 1 }, { -1, 1 }, { -1, -1 }, { 1, -1 }, // Diagonals
-		{ 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1 }, // Knight in chess
-		{ 1, 2 }, { 1, -2 }, { -1, 2 }, { -1, -2 }
-	} };
-
-	std::vector<float> occlusion(height * width, 0.0f);
-
-#pragma omp parallel for
-	for (int i = 0; i < height; i++)
-	{
-		for (int j = 0; j < width; j++)
-		{
-			for (const auto& direction : directions)
-			{
-				// Angle between 0 and pi/2
-				const float angle = horizonAngle(terrain, i, j, direction.first, direction.second);
-
-				// Percentage of the surface of the hemisphere that is accessible by ambient light.
-				occlusion[i * width + j] += angle / (directions.size() * M_PI_2);
-			}
-		}
-	}
-
-	// Remap between 0 and 1.
-	// TODO: Let the user choose the mapping
-	const auto itMinMax = std::minmax_element(occlusion.begin(), occlusion.end());
-	const float minimum = *itMinMax.first;
-	const float maximum = *itMinMax.second; // Should be about 1.0
-	for (unsigned int i = 0; i < occlusion.size(); i++)
-	{
-		occlusion[i] = (occlusion[i] - minimum) / (maximum - minimum);
-	}
-
-	return occlusion;
 }

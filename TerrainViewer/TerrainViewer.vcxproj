@@ -117,6 +117,7 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="occlusion.cpp" />
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="terrainviewerwidget.cpp" />
   </ItemGroup>
@@ -145,7 +146,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="occlusion.h" />
     <ClInclude Include="terrain.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

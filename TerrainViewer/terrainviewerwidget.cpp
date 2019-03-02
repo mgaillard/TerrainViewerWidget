@@ -7,6 +7,8 @@
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 
+#include "occlusion.h"
+
 using namespace TerrainViewer;
 
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
