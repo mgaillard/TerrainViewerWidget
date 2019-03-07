@@ -166,13 +166,12 @@ void horizonAngleScan(const TerrainViewer::Terrain& terrain, int direction, std:
 			}
 			// Horizon point for (i, j) is convexHullBuffer.back()
 			// Update the horizon angle for this point
-			// Slope of the last element
-			// TODO improve this section
 			const int k = convexHullBuffer.back().first;
 			const int l = convexHullBuffer.back().second;
-			float slopeLast = horizonAngleScanSlope(i, j, terrain.atClamp(i, j), k, l, terrain.atClamp(k, l), cellWidth, cellHeight);
-			slopeLast = std::max(slopeLast, 0.f);
-			horizonAngles[i * width + j].angles[direction] = M_PI_2 - std::atan(slopeLast);
+			// Slope of the last element
+			const float slopeHorizon = horizonAngleScanSlope(i, j, terrain.atClamp(i, j), k, l, terrain.atClamp(k, l), cellWidth, cellHeight);
+			// SlopeLast cannot be < 0 because at infinity, the angle with the horizon is 0.
+			horizonAngles[i * width + j].angles[direction] = M_PI_2 - std::atan(std::max(slopeHorizon, 0.f));
 
 			// We add the current point to the convexHullBuffer
 			convexHullBuffer.emplace_back(i, j);
