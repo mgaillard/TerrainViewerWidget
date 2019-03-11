@@ -12,7 +12,7 @@
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	ui.setupUi(this);
+	setupUi();
 	createActions();
 }
 
@@ -38,7 +38,20 @@ void MainWindow::loadFile()
 	}
 }
 
+void MainWindow::setupUi()
+{
+	ui.setupUi(this);
+
+	m_parameterDock = new TerrainViewer::ParameterDock(this);
+	m_parameterDock->setParameters(TerrainViewer::TerrainViewerWidget::default_parameters);
+	addDockWidget(Qt::RightDockWidgetArea, m_parameterDock);
+	ui.menuWindow->addAction(m_parameterDock->toggleViewAction());
+}
+
 void MainWindow::createActions()
 {
 	connect(ui.actionLoad, &QAction::triggered, this, &MainWindow::loadFile);
+	connect(m_parameterDock, &TerrainViewer::ParameterDock::parameterChanged, [=]() {
+		ui.terrainViewerWidget->setParameters(m_parameterDock->parameters());
+	});
 }

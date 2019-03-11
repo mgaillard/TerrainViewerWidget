@@ -51,6 +51,9 @@
     <ClCompile Include="occlusion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="parameterdock.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -59,9 +62,15 @@
     <QtMoc Include="terrainviewerwidget.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="parameterdock.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="mainwindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="parameterdock.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -95,6 +104,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="occlusion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="terrainviewerparameters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

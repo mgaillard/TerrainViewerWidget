@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_mainwindow.h"
+#include "parameterdock.h"
 
 class MainWindow : public QMainWindow
 {
@@ -14,7 +15,10 @@ private slots:
 	void loadFile();
 
 private:
+	void setupUi();
 	void createActions();
 
 	Ui::MainWindowClass ui;
+
+	TerrainViewer::ParameterDock* m_parameterDock;
 };

@@ -14,6 +14,7 @@
 
 #include "camera.h"
 #include "terrain.h"
+#include "terrainviewerparameters.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -25,6 +26,8 @@ class TerrainViewerWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_3
 	Q_OBJECT
 
 public:
+	static const Parameters default_parameters;
+
 	explicit TerrainViewerWidget(QWidget *parent = Q_NULLPTR);
 	virtual ~TerrainViewerWidget();
 
@@ -42,6 +45,12 @@ public slots:
 	 * \param terrain A non empty terrain.
 	 */
 	void loadTerrain(const Terrain& terrain);
+
+	/**
+	 * \brief Change the parameters of the widget.
+	 * \param parameters The new parameters.
+	 */
+	void setParameters(const Parameters& parameters);
 
 protected:
 	void initializeGL() override;
@@ -95,12 +104,17 @@ private:
 	void initNormalTexture();
 	void initLightMapTexture();
 
+	/**
+	 * \brief Update the uniform variables in the shader that are given as parameters.
+	 * The m_program must be bound when this function is called.
+	 */
+	void updateParameters();
+
 	int m_numberPatchesHeight;
 	int m_numberPatchesWidth;
 	GLsizei m_numberPatches;
 
-	bool m_wireFrame;
-	float m_pixelsPerTriangleEdge;
+	Parameters m_parameters;
 
 	QOpenGLDebugLogger* m_logger;
 	std::unique_ptr<QOpenGLShaderProgram> m_program;

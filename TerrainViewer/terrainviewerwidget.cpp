@@ -11,13 +11,20 @@
 
 using namespace TerrainViewer;
 
+// Default parameters
+const Parameters TerrainViewerWidget::default_parameters = {
+	Palette::demScreen,
+	Shading::uniformAmbientOcclusion,
+	false,    // wireframe
+	16.f,     // pixelsPerTriangleEdge
+};
+
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	QOpenGLWidget(parent),
 	m_numberPatchesHeight(0),
 	m_numberPatchesWidth(0),
 	m_numberPatches(0),
-	m_wireFrame(false),
-	m_pixelsPerTriangleEdge(16.0),
+	m_parameters(default_parameters),
 	m_logger(new QOpenGLDebugLogger(this)),
 	m_program(nullptr),
 	m_terrain(0.0f, 0.0f, 0.0f),
@@ -26,6 +33,7 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_lightMapTexture(QOpenGLTexture::Target2D),
 	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
 {
+	
 }
 
 TerrainViewerWidget::~TerrainViewerWidget()
@@ -81,6 +89,21 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	update();
 }
 
+void TerrainViewerWidget::setParameters(const Parameters& parameters)
+{
+	m_parameters = parameters;
+
+	if (m_program)
+	{
+		m_program->bind();
+		updateParameters();
+		m_program->release();
+
+		// Parameters changed, we update the view
+		update();
+	}
+}
+
 void TerrainViewerWidget::initializeGL()
 {
 	connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &TerrainViewerWidget::cleanup);
@@ -112,6 +135,9 @@ void TerrainViewerWidget::initializeGL()
 	m_program->enableAttributeArray(posLoc);
 	// Tell OpenGL how to get the attribute values out of the vbo (stride and offset).
 	m_program->setAttributeArray(posLoc, nullptr, 3, 0);
+
+	// Update the uniform variables in the shader that are given as parameters
+	updateParameters();
 
 	m_vbo.release();
 	m_program->release();
@@ -171,9 +197,6 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("terrain.resolution_width", m_terrain.resolutionWidth());
 		m_program->setUniformValue("terrain.max_altitude", m_terrain.maxAltitude());
 
-		// Update pixelsPerTriangleEdge
-		m_program->setUniformValue("pixelsPerTriangleEdge", m_pixelsPerTriangleEdge);
-
 		// Bind the height texture
 		const auto heightTextureUnit = 0;
 		m_program->setUniformValue("terrain.height_texture", heightTextureUnit);
@@ -195,14 +218,14 @@ void TerrainViewerWidget::paintGL()
 		const auto verticesPerPatch = 4;
 		m_program->setPatchVertexCount(verticesPerPatch);
 
-		if (m_wireFrame)
+		if (m_parameters.wireFrame)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		}
 
 		glDrawArrays(GL_PATCHES, 0, verticesPerPatch * m_numberPatches);
 		
-		if (m_wireFrame)
+		if (m_parameters.wireFrame)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
@@ -327,4 +350,19 @@ void TerrainViewerWidget::initLightMapTexture()
 	m_lightMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_lightMapTexture.allocateStorage();
 	m_lightMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, lightMap.data());
+}
+
+void TerrainViewerWidget::updateParameters()
+{
+	if (m_program)
+	{
+		// Update palette
+		m_program->setUniformValue("palette", static_cast<int>(m_parameters.palette));
+
+		// Update shading
+		m_program->setUniformValue("shading", static_cast<int>(m_parameters.shading));
+
+		// Update pixelsPerTriangleEdge
+		m_program->setUniformValue("pixelsPerTriangleEdge", m_parameters.pixelsPerTriangleEdge);
+	}
 }
