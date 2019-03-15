@@ -8,7 +8,9 @@
 namespace TerrainViewer
 {
 
-std::vector<float> ambientOcclusion(const TerrainViewer::Terrain& terrain);
+std::vector<float> ambientOcclusionBasic(const TerrainViewer::Terrain& terrain);
+
+std::vector<float> ambientOcclusionUniform(const TerrainViewer::Terrain& terrain);
 
 }
 

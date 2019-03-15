@@ -1,7 +1,6 @@
 #include "terrainviewerwidget.h"
 
 #include <vector>
-#include <array>
 #include <cassert>
 
 #include <QMouseEvent>
@@ -338,7 +337,7 @@ void TerrainViewerWidget::initNormalTexture()
 
 void TerrainViewerWidget::initLightMapTexture()
 {
-	const std::vector<float> lightMap = ambientOcclusion(m_terrain);
+	const std::vector<float> lightMap = ambientOcclusionBasic(m_terrain);
 
 	m_lightMapTexture.destroy();
 	m_lightMapTexture.destroy();
