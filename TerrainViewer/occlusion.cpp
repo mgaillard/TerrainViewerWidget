@@ -284,7 +284,9 @@ std::vector<float> TerrainViewer::ambientOcclusion(const Terrain& terrain)
 }
 
 /*
- * WIP: Lighting model
+ * WIP: Model with uniform ambient lighting.
+ * Better than the current model because it takes in account the normal.
+ * Try with an angle that is not clamped at PI/2
  *
 const float intensity = 1.0;
 
@@ -305,6 +307,8 @@ for (const auto& direction : directions)
 	const float normalProjected = normal.x() * cosine + normal.y() * sine;
 	// Clamp the angleZenith with the normal so that dot(N, e) >= 0
 	const float theta = std::min(angleZenith, float(M_PI_2) + atan(normalProjected / normal.z()));
+
+	// Try to compute the surface of the hemisphere that is accessible light with the constraint dot(N, e) >= 0
 
 	light += intensity * (normal.z() / nbDirs) * sin(theta) * sin(theta);
 	light += intensity * (sin(M_PI / nbDirs) / M_PI) * ((theta - 0.5*sin(2.0 * theta))*normalProjected);
