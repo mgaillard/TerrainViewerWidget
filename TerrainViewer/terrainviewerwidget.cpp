@@ -15,7 +15,7 @@ const Parameters TerrainViewerWidget::default_parameters = {
 	Palette::demScreen,
 	Shading::uniformAmbientOcclusion,
 	false,    // wireframe
-	16.f,     // pixelsPerTriangleEdge
+	8.f,      // pixelsPerTriangleEdge
 };
 
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
@@ -337,7 +337,7 @@ void TerrainViewerWidget::initNormalTexture()
 
 void TerrainViewerWidget::initLightMapTexture()
 {
-	const std::vector<float> lightMap = ambientOcclusionBasic(m_terrain);
+	const std::vector<float> lightMap = ambientOcclusionUniform(m_terrain);
 
 	m_lightMapTexture.destroy();
 	m_lightMapTexture.destroy();

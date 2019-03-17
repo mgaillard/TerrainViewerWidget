@@ -3,6 +3,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <array>
+#include <bitset>
 
 #include "utils.h"
 
@@ -66,6 +67,9 @@ float horizonAngleBruteForce(const TerrainViewer::Terrain& terrain, int i, int j
 
 struct HorizonAngles
 {
+	// A type to specify which direction is enabled when computing ambient occlusion
+	using EnabledDirections = std::bitset<16>;
+
 	// Horizon angles directions
 	static const std::array<std::pair<int, int>, 16> directions;
 
@@ -265,17 +269,21 @@ std::vector<float> computeOcclusionBasic(const std::vector<HorizonAngles>& horiz
 }
 
 /**
- * \brief Compute the occlusion of a terrain with a uniform diffuse light
+ * \brief Compute the ambient occlusion for a terrain with a uniform diffuse light
  *        Approximation of the rendering equation
- * \param horizonAngles Horizon angles of a terrain
+ *        It's possible to control the light direction, just enable 
+ *        (lightIntensity == 1.0f && enabledDirections.all()) => uniform not directed light 
+ * \param terrain The terrain on which to compute the ambient occlusion
+ * \param horizonAngles Horizon angles of the terrain
+ * \param lightIntensity Intensity of light, should be 1.0f if all directions are enabled
+ * \param enabledDirections Light directions that are enabled
  * \return The occlusion value for each cell of the terrain in a flat array
  */
-std::vector<float> computeOcclusionUniform(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles)
+std::vector<float> computeOcclusionUniform(const Terrain& terrain,
+										   const std::vector<HorizonAngles>& horizonAngles,
+										   float lightIntensity,
+										   const HorizonAngles::EnabledDirections& enabledDirections)
 {
-	// TODO: make it variable, so that the user can modify it
-	// Intensity of light
-	const float intensity = 1.0;
-
 	// Number of azimuthal directions
 	const int nbDirections = HorizonAngles::directions.size();
 
@@ -292,9 +300,17 @@ std::vector<float> computeOcclusionUniform(const Terrain& terrain, const std::ve
 			// Light on this cell
 			light[i * width + j] = 0.0f;
 
+			// TODO: Precompute what is dependent on the direction and swap the for loop order.
+			// TODO: The direction for should be the first, then i and j.
 			// Sum over all directions
 			for (unsigned int d = 0; d < nbDirections; d++)
 			{
+				// If the direction is not enabled, we skip it
+				if (!enabledDirections[d])
+				{
+					continue;
+				}
+
 				// The current direction
 				const auto& direction = HorizonAngles::directions[d];
 
@@ -304,16 +320,17 @@ std::vector<float> computeOcclusionUniform(const Terrain& terrain, const std::ve
 				const float angleZenith = horizonAngles[i * width + j].angles[d];
 
 				// cos(2kpi/n)
-				const float cosine = static_cast<float>(direction.second) / std::hypot(direction.first, direction.second);
+				const float cosine = -static_cast<float>(direction.second) / std::hypot(direction.first, direction.second);
 				// sin(2kpi/n)
-				const float sine = static_cast<float>(direction.first) / std::hypot(direction.first, direction.second);
+				const float sine = -static_cast<float>(direction.first) / std::hypot(direction.first, direction.second);
 				// Normal projected on the azimuthal direction: nx * cos(2kpi/n) + ny * sin(2kpi/n)
 				const float projectionNormal = normal.x() * cosine + normal.y() * sine;
+
 				// Clamp the angleZenith with the normal so that dot(N, e) >= 0
 				const float theta = std::min(angleZenith, float(M_PI_2) + atan2(projectionNormal, normal.z()));
 
-				light[i * width + j] += intensity * (normal.z() / nbDirections) * sin(theta) * sin(theta);
-				light[i * width + j] += intensity * (sin(M_PI / nbDirections) / M_PI) * ((theta - 0.5*sin(2.0 * theta))*projectionNormal);
+				light[i * width + j] += lightIntensity * (normal.z() / nbDirections) * sin(theta) * sin(theta);
+				light[i * width + j] += lightIntensity * (sin(M_PI / nbDirections) / M_PI) * ((theta - 0.5*sin(2.0 * theta))*projectionNormal);
 			}
 		}
 	}
@@ -348,7 +365,26 @@ std::vector<float> TerrainViewer::ambientOcclusionUniform(const Terrain& terrain
 	const std::vector<HorizonAngles> horizonAngles = computeHorizonAnglesFast(terrain);
 
 	// Compute the occlusion value in every cell according to the horizon angles
-	const std::vector<float> occlusion = computeOcclusionUniform(terrain, horizonAngles);
+	HorizonAngles::EnabledDirections enabledDirections;
+	// Set all directions to enabled
+	enabledDirections.set();
+
+	const std::vector<float> occlusion = computeOcclusionUniform(terrain, horizonAngles, 1.0f, enabledDirections);
+
+	return occlusion;
+}
+
+std::vector<float> TerrainViewer::ambientOcclusionDirectionalUniform(const Terrain& terrain)
+{
+	// Compute the horizon angles in every cell
+	const std::vector<HorizonAngles> horizonAngles = computeHorizonAnglesFast(terrain);
+
+	// Compute the occlusion value in every cell according to the horizon angles
+	HorizonAngles::EnabledDirections enabledDirections;
+	// Set only one direction, the 
+	enabledDirections.set(6);
+
+	const std::vector<float> occlusion = computeOcclusionUniform(terrain, horizonAngles, 8.0f, enabledDirections);
 
 	return occlusion;
 }
