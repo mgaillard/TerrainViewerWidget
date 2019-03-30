@@ -57,7 +57,17 @@
       </item>
       <item>
        <property name="text">
-        <string>Ambient Occlusion</string>
+        <string>Uniform Light Basic</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Uniform Light</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Directional Light</string>
        </property>
       </item>
      </widget>

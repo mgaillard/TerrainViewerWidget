@@ -13,7 +13,7 @@ using namespace TerrainViewer;
 // Default parameters
 const Parameters TerrainViewerWidget::default_parameters = {
 	Palette::demScreen,
-	Shading::uniformAmbientOcclusion,
+	Shading::uniformLight,
 	false,    // wireframe
 	8.f,      // pixelsPerTriangleEdge
 };
@@ -79,6 +79,9 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	m_vbo.bind();
 	m_vbo.allocate(patches.data(), patches.size() * sizeof(Patch));
 	m_vbo.release();
+
+	// Precompute the horizon angles
+	m_horizonAngles = computeHorizonAngles(m_terrain);
 	
 	// Init the textures storing the information of the terrain
 	initTerrainTexture();
@@ -90,6 +93,8 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 
 void TerrainViewerWidget::setParameters(const Parameters& parameters)
 {
+	const bool shadingChanged = (m_parameters.shading != parameters.shading);
+
 	m_parameters = parameters;
 
 	if (m_program)
@@ -97,6 +102,12 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 		m_program->bind();
 		updateParameters();
 		m_program->release();
+
+		// Update the light map if the lighting model changed
+		if (shadingChanged)
+		{
+			initLightMapTexture();
+		}
 
 		// Parameters changed, we update the view
 		update();
@@ -337,7 +348,27 @@ void TerrainViewerWidget::initNormalTexture()
 
 void TerrainViewerWidget::initLightMapTexture()
 {
-	const std::vector<float> lightMap = ambientOcclusionUniform(m_terrain);
+	std::vector<float> lightMap;
+
+	switch (m_parameters.shading)
+	{
+	case Shading::uniformLightBasic:
+		lightMap = ambientOcclusionBasic(m_terrain, m_horizonAngles);
+		break;
+
+	case Shading::uniformLight:
+		lightMap = ambientOcclusionUniform(m_terrain, m_horizonAngles);
+		break;
+
+	case Shading::directionalLight:
+		lightMap = ambientOcclusionDirectionalUniform(m_terrain, m_horizonAngles);
+		break;
+
+	default:
+		// By default, the light map is 1.0f everywhere
+		lightMap.resize(m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), 1.0f);
+		break;
+	}
 
 	m_lightMapTexture.destroy();
 	m_lightMapTexture.destroy();

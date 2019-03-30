@@ -19,7 +19,9 @@ uniform int palette = PaletteWhite;
 
 // Shading method
 const int ShadingNormal = 0;
-const int ShadingUniformAmbientOcclusion = 1;
+const int ShadingUniformLightBasic = 1;
+const int ShadingUniformLight = 2;
+const int ShadingDirectionalLight = 3;
 uniform int shading = ShadingNormal;
 
 // Varying variables
@@ -120,7 +122,9 @@ vec3 compute_shading()
 		return shading_normal();
 	break;
 
-	case ShadingUniformAmbientOcclusion:
+	case ShadingUniformLightBasic:
+	case ShadingUniformLight:
+	case ShadingDirectionalLight:
 		return shading_occlusion();
 	break;
 	}

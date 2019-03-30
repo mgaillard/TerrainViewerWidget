@@ -3,11 +3,18 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <array>
-#include <bitset>
 
 #include "utils.h"
 
 using namespace TerrainViewer;
+
+const std::array<std::pair<int, int>, 16> HorizonAngles::directions = {
+{
+	{ 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 },   // 4-connected neighborhood
+	{ 1, 1 }, { -1, 1 }, { -1, -1 }, { 1, -1 }, // Diagonals
+	{ 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1 }, // Knight in chess
+	{ 1, 2 }, { 1, -2 }, { -1, 2 }, { -1, -2 }
+} };
 
 /**
  * \brief Compute the tangent of the horizon angle between two cells on the terrain
@@ -64,26 +71,6 @@ float horizonAngleBruteForce(const TerrainViewer::Terrain& terrain, int i, int j
 
 	return M_PI_2 - std::atan(horizonTan);
 }
-
-struct HorizonAngles
-{
-	// A type to specify which direction is enabled when computing ambient occlusion
-	using EnabledDirections = std::bitset<16>;
-
-	// Horizon angles directions
-	static const std::array<std::pair<int, int>, 16> directions;
-
-	// Array of 16 horizon angles value initialized
-	std::array<float, 16> angles{};
-};
-
-const std::array<std::pair<int, int>, 16> HorizonAngles::directions = {
-{
-	{ 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 },   // 4-connected neighborhood
-	{ 1, 1 }, { -1, 1 }, { -1, -1 }, { 1, -1 }, // Diagonals
-	{ 2, 1 }, { 2, -1 }, { -2, 1 }, { -2, -1 }, // Knight in chess
-	{ 1, 2 }, { 1, -2 }, { -1, 2 }, { -1, -2 }
-} };
 
 /**
  * \brief Compute the horizon angles of every cell in one direction
@@ -188,7 +175,7 @@ void horizonAngleScan(const TerrainViewer::Terrain& terrain, int direction, std:
 }
 
 /**
- * \brief Mainly for testing purpose, use computeHorizonAnglesFast instead.
+ * \brief Mainly for testing purpose, use computeHorizonAngles instead.
  * \param terrain A terrain
  * \return The horizon angles in one cell of the terrain
  */
@@ -217,13 +204,7 @@ std::vector<HorizonAngles> computeHorizonAnglesBruteForce(const Terrain& terrain
 	return horizonAngles;
 }
 
-/**
- * \brief Compute the horizon angles on a terrain with a fast algorithm.
- *		  See horizonAngleScan
- * \param terrain A terrain
- * \return The horizon angles in each cell of the terrain
- */
-std::vector<HorizonAngles> computeHorizonAnglesFast(const Terrain& terrain)
+std::vector<HorizonAngles> TerrainViewer::computeHorizonAngles(const Terrain& terrain)
 {
 	const int width = terrain.resolutionWidth();
 	const int height = terrain.resolutionHeight();
@@ -293,6 +274,7 @@ std::vector<float> computeOcclusionUniform(const Terrain& terrain,
 	const int width = terrain.resolutionWidth();
 	const int height = terrain.resolutionHeight();
 
+#pragma omp parallel for
 	for (int i = 0; i < height; i++)
 	{
 		for (int j = 0; j < width; j++)
@@ -338,11 +320,8 @@ std::vector<float> computeOcclusionUniform(const Terrain& terrain,
 	return light;
 }
 
-std::vector<float> TerrainViewer::ambientOcclusionBasic(const Terrain& terrain)
+std::vector<float> TerrainViewer::ambientOcclusionBasic(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles)
 {
-	// Compute the horizon angles in every cell
-	const std::vector<HorizonAngles> horizonAngles = computeHorizonAnglesFast(terrain);
-
 	// Compute the occlusion value in every cell according to the horizon angles
 	std::vector<float> occlusion = computeOcclusionBasic(horizonAngles);
 
@@ -359,11 +338,8 @@ std::vector<float> TerrainViewer::ambientOcclusionBasic(const Terrain& terrain)
 	return occlusion;
 }
 
-std::vector<float> TerrainViewer::ambientOcclusionUniform(const Terrain& terrain)
+std::vector<float> TerrainViewer::ambientOcclusionUniform(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles)
 {
-	// Compute the horizon angles in every cell
-	const std::vector<HorizonAngles> horizonAngles = computeHorizonAnglesFast(terrain);
-
 	// Compute the occlusion value in every cell according to the horizon angles
 	HorizonAngles::EnabledDirections enabledDirections;
 	// Set all directions to enabled
@@ -374,14 +350,11 @@ std::vector<float> TerrainViewer::ambientOcclusionUniform(const Terrain& terrain
 	return occlusion;
 }
 
-std::vector<float> TerrainViewer::ambientOcclusionDirectionalUniform(const Terrain& terrain)
+std::vector<float> TerrainViewer::ambientOcclusionDirectionalUniform(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles)
 {
-	// Compute the horizon angles in every cell
-	const std::vector<HorizonAngles> horizonAngles = computeHorizonAnglesFast(terrain);
-
 	// Compute the occlusion value in every cell according to the horizon angles
 	HorizonAngles::EnabledDirections enabledDirections;
-	// Set only one direction, the 
+	// Set only one direction
 	enabledDirections.set(6);
 
 	const std::vector<float> occlusion = computeOcclusionUniform(terrain, horizonAngles, 8.0f, enabledDirections);

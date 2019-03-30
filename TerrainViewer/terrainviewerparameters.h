@@ -20,7 +20,9 @@ enum class Palette
 enum class Shading
 {
 	normal = 0,
-	uniformAmbientOcclusion = 1
+	uniformLightBasic = 1,
+	uniformLight = 2,
+	directionalLight = 3
 };
 
 /**

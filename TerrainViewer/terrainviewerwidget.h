@@ -15,6 +15,7 @@
 #include "camera.h"
 #include "terrain.h"
 #include "terrainviewerparameters.h"
+#include "occlusion.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -120,6 +121,8 @@ private:
 	std::unique_ptr<QOpenGLShaderProgram> m_program;
 
 	Terrain m_terrain;
+
+	std::vector<HorizonAngles> m_horizonAngles;
 
 	QOpenGLVertexArrayObject m_vao;
 	QOpenGLBuffer m_vbo;
