@@ -69,9 +69,9 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 
 	m_terrain = terrain;
 
-	// Generate patches to match the terrain
-	m_numberPatchesHeight = m_terrain.resolutionHeight() / 32;
-	m_numberPatchesWidth = m_terrain.resolutionWidth() / 32;
+	// Generate patches to match the terrain. The minimum number of patch to generate is 1.
+	m_numberPatchesHeight = std::max(1, m_terrain.resolutionHeight() / 32);
+	m_numberPatchesWidth = std::max(1, m_terrain.resolutionWidth() / 32);
 	m_numberPatches = m_numberPatchesWidth * m_numberPatchesHeight;
 	auto patches = generatePatches(m_terrain.height(), m_terrain.width(), m_numberPatchesHeight, m_numberPatchesWidth);
 
