@@ -54,6 +54,9 @@
     <ClCompile Include="parameterdock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="openterraindialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -65,12 +68,18 @@
     <QtMoc Include="parameterdock.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="openterraindialog.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="mainwindow.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="parameterdock.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="openterraindialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

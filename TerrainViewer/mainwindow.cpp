@@ -24,16 +24,23 @@ void MainWindow::loadFile()
 	// Check if file exists
 	if (QFileInfo::exists(fileName))
 	{
-		const auto image = cv::imread(fileName.toStdString(), cv::ImreadModes::IMREAD_ANYDEPTH);
-		// TODO: Let the user choose the dimensions
-		TerrainViewer::Terrain terrain(10.0f, 10.0f, 1.0f);
-		if (terrain.loadFromImage(image))
+		// Ask the user for the size of the terrain
+		auto dialog = new TerrainViewer::OpenTerrainDialog(this);
+		const int returnCode = dialog->exec();
+
+		if (returnCode == QDialog::Accepted)
 		{
-			ui.terrainViewerWidget->loadTerrain(terrain);
-		}
-		else
-		{
-			QMessageBox::critical(this, tr("Impossible to import"), tr("It is not a valid image file"));
+			const auto image = cv::imread(fileName.toStdString(), cv::ImreadModes::IMREAD_ANYDEPTH);
+
+			TerrainViewer::Terrain terrain(dialog->sizeX(), dialog->sizeY(), dialog->maxAltitude());
+			if (terrain.loadFromImage(image))
+			{
+				ui.terrainViewerWidget->loadTerrain(terrain);
+			}
+			else
+			{
+				QMessageBox::critical(this, tr("Impossible to import"), tr("It is not a valid image file"));
+			}
 		}
 	}
 }

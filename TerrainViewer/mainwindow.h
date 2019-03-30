@@ -1,8 +1,10 @@
-#pragma once
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QtWidgets/QMainWindow>
 #include "ui_mainwindow.h"
 #include "parameterdock.h"
+#include "openterraindialog.h"
 
 class MainWindow : public QMainWindow
 {
@@ -22,3 +24,5 @@ private:
 
 	TerrainViewer::ParameterDock* m_parameterDock;
 };
+
+#endif // MAINWINDOW_H
