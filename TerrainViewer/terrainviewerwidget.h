@@ -112,6 +112,8 @@ private:
 	
 	/**
 	 * \brief Initialize the texture storing the normals.
+	 * Compute the normals on the shader based on the height map texture.
+	 * Height map texture must be initialized.
 	 * \param computeOnShader True to compute the normals on the GPU using a compute shader.
 	 *						  False to compute on the CPU.
 	 */

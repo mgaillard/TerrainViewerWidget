@@ -15,7 +15,7 @@ const Parameters TerrainViewerWidget::default_parameters = {
 	Palette::demScreen,
 	Shading::uniformLight,
 	false,    // wireframe
-	8.f,      // pixelsPerTriangleEdge
+	1.f,      // pixelsPerTriangleEdge
 };
 
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
@@ -395,7 +395,7 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 	m_normalTexture.destroy();
 	m_normalTexture.destroy();
 	m_normalTexture.create();
-	m_normalTexture.setFormat(QOpenGLTexture::RGB32F);
+	m_normalTexture.setFormat(QOpenGLTexture::RGBA32F);
 	m_normalTexture.setMinificationFilter(QOpenGLTexture::Linear);
 	m_normalTexture.setMagnificationFilter(QOpenGLTexture::Linear);
 	m_normalTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
@@ -410,7 +410,7 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 	else
 	{
 		// Compute normals on the CPU
-		std::vector<QVector3D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
+		std::vector<QVector4D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
 
 	#pragma omp parallel for
 		for (int i = 0; i < m_terrain.resolutionHeight(); i++)
@@ -419,11 +419,15 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 			{
 				const auto index = i * m_terrain.resolutionWidth() + j;
 
-				normals[index] = m_terrain.normal(i, j);
+				const QVector3D normal = m_terrain.normal(i, j);
+				normals[index].setX(normal.x());
+				normals[index].setY(normal.y());
+				normals[index].setZ(normal.z());
+				normals[index].setW(0.0);
 			}
 		}
 
-		m_normalTexture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, normals.data());
+		m_normalTexture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, normals.data());
 	}	
 }
 
