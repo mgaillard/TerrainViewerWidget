@@ -99,10 +99,27 @@ private:
 	static std::vector<Patch> generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth);
 
 	/**
+	 * \brief Compute the normals of the terrain in a compute shader.
+	 * Height map and normals textures must be initialized.
+	 * Read from the height map texture and directly update the normal texture.
+	 */
+	void computeNormalsOnShader();
+
+	/**
 	 * \brief Initialize the texture storing the height of the terrain.
 	 */
 	void initTerrainTexture();
-	void initNormalTexture();
+	
+	/**
+	 * \brief Initialize the texture storing the normals.
+	 * \param computeOnShader True to compute the normals on the GPU using a compute shader.
+	 *						  False to compute on the CPU.
+	 */
+	void initNormalTexture(bool computeOnShader = true);
+	
+	/**
+	 * \brief Initialize the texture storing the light map.
+	 */
 	void initLightMapTexture();
 
 	/**
@@ -119,6 +136,7 @@ private:
 
 	QOpenGLDebugLogger* m_logger;
 	std::unique_ptr<QOpenGLShaderProgram> m_program;
+	std::unique_ptr<QOpenGLShaderProgram> m_computeNormalsProgram;
 
 	Terrain m_terrain;
 

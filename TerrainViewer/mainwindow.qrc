@@ -4,5 +4,6 @@
         <file>Shaders/vertex_shader.glsl</file>
         <file>Shaders/tessellation_control.glsl</file>
         <file>Shaders/tessellation_evaluation.glsl</file>
+        <file>Shaders/compute_normals.glsl</file>
     </qresource>
 </RCC>

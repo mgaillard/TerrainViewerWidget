@@ -26,6 +26,7 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_parameters(default_parameters),
 	m_logger(new QOpenGLDebugLogger(this)),
 	m_program(nullptr),
+	m_computeNormalsProgram(nullptr),
 	m_terrain(0.0f, 0.0f, 0.0f),
 	m_heightTexture(QOpenGLTexture::Target2D),
 	m_normalTexture(QOpenGLTexture::Target2D),
@@ -51,6 +52,7 @@ void TerrainViewerWidget::cleanup()
 		m_normalTexture.destroy();
 		m_lightMapTexture.destroy();
 		m_program.reset(nullptr);
+		m_computeNormalsProgram.reset(nullptr);
 		doneCurrent();
 	}
 }
@@ -61,6 +63,35 @@ void TerrainViewerWidget::printInfo()
 	qDebug() << "Renderer: " << QString::fromLatin1(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 	qDebug() << "Version: " << QString::fromLatin1(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 	qDebug() << "GLSL Version: " << QString::fromLatin1(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
+	// Display computer shader constants
+	qDebug() << "Compute shader capabilities:";
+	int workgroupCount[3];
+	int workgroupSize[3];
+	int workgroupInvocations;
+
+	// The maximum number of work groups that may be dispatched to a compute shader
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &workgroupCount[0]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &workgroupCount[1]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &workgroupCount[2]);
+	qDebug() << "Maximum number of work groups: "
+	         << "\tx: " << workgroupCount[0]
+	         << "\ty: " << workgroupCount[1]
+	         << "\tz: " << workgroupCount[2];
+
+	// The maximum size of a work groups that may be used during compilation of a compute shader
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &workgroupSize[0]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &workgroupSize[1]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &workgroupSize[2]);
+	qDebug() << "Maximum size of work groups: "
+	         << "\tx: " << workgroupSize[0]
+	         << "\ty: " << workgroupSize[1]
+	         << "\tz: " << workgroupSize[2];
+
+	// The number of invocations in a single local work group (i.e., the product of the three dimensions)
+	// that may be dispatched to a compute shader
+	glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &workgroupInvocations);
+	qDebug() << "Maximum number of invocations in a single local work group: " << workgroupInvocations;
 }
 
 void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
@@ -123,6 +154,10 @@ void TerrainViewerWidget::initializeGL()
 	glClearColor(0.5, 0.5, 0.5, 1.0);	
 
 	const auto posLoc = 0;
+
+	m_computeNormalsProgram = std::make_unique<QOpenGLShaderProgram>();
+	m_computeNormalsProgram->addShaderFromSourceFile(QOpenGLShader::Compute, ":/MainWindow/Shaders/compute_normals.glsl");
+	m_computeNormalsProgram->link();
 
 	m_program = std::make_unique<QOpenGLShaderProgram>();
 	m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/MainWindow/Shaders/vertex_shader.glsl");
@@ -305,6 +340,43 @@ std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(flo
 	return patches;
 }
 
+void TerrainViewerWidget::computeNormalsOnShader()
+{
+	// Local size in the compute shader
+	const int localSizeX = 4;
+	const int localSizeY = 4;
+
+	if (m_computeNormalsProgram)
+	{
+		m_computeNormalsProgram->bind();
+
+		// Update uniform values
+		m_computeNormalsProgram->setUniformValue("terrain_height", m_terrain.height());
+		m_computeNormalsProgram->setUniformValue("terrain_width", m_terrain.width());
+
+		// Bind the height texture as an image
+		const auto heightImageUnit = 0;
+		glBindImageTexture(heightImageUnit, m_heightTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+
+		// Bind the normal texture as an image
+		const auto normalImageUnit = 1;
+		glBindImageTexture(normalImageUnit, m_normalTexture.textureId(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+		// Compute the number of blocks in each dimensions
+		const int blocksX = std::max(1, 1 + ((m_terrain.resolutionWidth() - 1) / localSizeX));
+		const int blocksY = std::max(1, 1 + ((m_terrain.resolutionHeight() - 1) / localSizeY));
+		// Launch the compute shader and wait for it to finish
+		glDispatchCompute(blocksX, blocksY, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// Unbind the images
+		glBindImageTexture(normalImageUnit, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+		glBindImageTexture(heightImageUnit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+
+		m_computeNormalsProgram->release();
+	}
+}
+
 void TerrainViewerWidget::initTerrainTexture()
 {
 	m_heightTexture.destroy();
@@ -318,22 +390,8 @@ void TerrainViewerWidget::initTerrainTexture()
 	m_heightTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
 }
 
-void TerrainViewerWidget::initNormalTexture()
+void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 {
-	// Compute normals
-	std::vector<QVector3D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
-
-#pragma omp parallel for
-	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
-	{
-		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
-		{
-			const auto index = i * m_terrain.resolutionWidth() + j;
-
-			normals[index] = m_terrain.normal(i, j);
-		}
-	}
-
 	m_normalTexture.destroy();
 	m_normalTexture.destroy();
 	m_normalTexture.create();
@@ -343,7 +401,30 @@ void TerrainViewerWidget::initNormalTexture()
 	m_normalTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
 	m_normalTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_normalTexture.allocateStorage();
-	m_normalTexture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, normals.data());
+
+	if (computeOnShader)
+	{
+		// Compute the normals on the GPU with the compute shader
+		computeNormalsOnShader();
+	}
+	else
+	{
+		// Compute normals on the CPU
+		std::vector<QVector3D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
+
+	#pragma omp parallel for
+		for (int i = 0; i < m_terrain.resolutionHeight(); i++)
+		{
+			for (int j = 0; j < m_terrain.resolutionWidth(); j++)
+			{
+				const auto index = i * m_terrain.resolutionWidth() + j;
+
+				normals[index] = m_terrain.normal(i, j);
+			}
+		}
+
+		m_normalTexture.setData(QOpenGLTexture::RGB, QOpenGLTexture::Float32, normals.data());
+	}	
 }
 
 void TerrainViewerWidget::initLightMapTexture()

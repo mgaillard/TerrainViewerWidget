@@ -143,6 +143,7 @@
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\compute_normals.glsl" />
     <None Include="Shaders\fragment_shader.glsl" />
     <None Include="Shaders\tessellation_control.glsl" />
     <None Include="Shaders\tessellation_evaluation.glsl" />
