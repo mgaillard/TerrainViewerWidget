@@ -18,6 +18,7 @@ If you want to test the software, the widget is wrapped in a sample application.
 
 ### Using the Widget in your application
 ```c++
+using namespace TerrainViewer;
 // Create the widget
 TerrainViewerWidget* terrainViewer = new TerrainViewerWidget();
 
@@ -38,7 +39,7 @@ terrainViewer->loadTerrain(terrain);
 ## Author
 Mathieu Gaillard
 
-This software has been developed for the CGT-520 class at Purdue University.
+This software has been developed for the CGT-520 and CGT-512 classes at Purdue University.
 
 ## License
 See the LICENSE file.
