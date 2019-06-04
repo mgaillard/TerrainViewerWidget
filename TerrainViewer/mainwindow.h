@@ -16,6 +16,10 @@ public:
 private slots:
 	void loadFile();
 
+	void exportNormalMap();
+
+	void exportLightMap();
+
 private:
 	void setupUi();
 	void createActions();

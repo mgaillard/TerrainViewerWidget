@@ -145,6 +145,50 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 	}
 }
 
+QImage TerrainViewerWidget::normalTexture() const
+{
+	const std::vector<QVector4D> normalMap = computeNormalsOnCpu();
+
+	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_RGB32);
+
+#pragma omp parallel for
+	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
+	{
+		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
+		{
+			const auto index = i * m_terrain.resolutionWidth() + j;
+
+			const auto red   = static_cast<uint8_t>(255.0f * (normalMap[index].x() + 1.0f) / 2.0f);
+			const auto green = static_cast<uint8_t>(255.0f * (normalMap[index].y() + 1.0f) / 2.0f);
+			const auto blue  = static_cast<uint8_t>(255.0f * (normalMap[index].z() + 1.0f) / 2.0f);
+			image.setPixel(j, i, qRgb(red, green, blue));
+		}
+	}
+
+	return image;
+}
+
+QImage TerrainViewerWidget::lightMapTexture() const
+{
+	const std::vector<float> lightMap = computeLightMapTexture();
+
+	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_Grayscale8);
+
+#pragma omp parallel for
+	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
+	{
+		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
+		{
+			const auto index = i * m_terrain.resolutionWidth() + j;
+
+			const auto gray = static_cast<uint8_t>(255.0f * (lightMap[index] / 1.0f));
+			image.setPixel(j, i, qRgb(gray, gray, gray));
+		}
+	}
+
+	return image;
+}
+
 void TerrainViewerWidget::initializeGL()
 {
 	connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &TerrainViewerWidget::cleanup);
@@ -340,6 +384,28 @@ std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(flo
 	return patches;
 }
 
+std::vector<QVector4D> TerrainViewerWidget::computeNormalsOnCpu() const
+{
+	std::vector<QVector4D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
+
+#pragma omp parallel for
+	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
+	{
+		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
+		{
+			const auto index = i * m_terrain.resolutionWidth() + j;
+
+			const QVector3D normal = m_terrain.normal(i, j).normalized();
+			normals[index].setX(normal.x());
+			normals[index].setY(normal.y());
+			normals[index].setZ(normal.z());
+			normals[index].setW(0.0);
+		}
+	}
+
+	return normals;
+}
+
 void TerrainViewerWidget::computeNormalsOnShader()
 {
 	// Local size in the compute shader
@@ -409,29 +475,13 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 	}
 	else
 	{
-		// Compute normals on the CPU
-		std::vector<QVector4D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
-
-	#pragma omp parallel for
-		for (int i = 0; i < m_terrain.resolutionHeight(); i++)
-		{
-			for (int j = 0; j < m_terrain.resolutionWidth(); j++)
-			{
-				const auto index = i * m_terrain.resolutionWidth() + j;
-
-				const QVector3D normal = m_terrain.normal(i, j);
-				normals[index].setX(normal.x());
-				normals[index].setY(normal.y());
-				normals[index].setZ(normal.z());
-				normals[index].setW(0.0);
-			}
-		}
+		const std::vector<QVector4D> normals = computeNormalsOnCpu();
 
 		m_normalTexture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, normals.data());
 	}	
 }
 
-void TerrainViewerWidget::initLightMapTexture()
+std::vector<float> TerrainViewerWidget::computeLightMapTexture() const
 {
 	std::vector<float> lightMap;
 
@@ -454,6 +504,13 @@ void TerrainViewerWidget::initLightMapTexture()
 		lightMap.resize(m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), 1.0f);
 		break;
 	}
+
+	return lightMap;
+}
+
+void TerrainViewerWidget::initLightMapTexture()
+{
+	const std::vector<float> lightMap = computeLightMapTexture();
 
 	m_lightMapTexture.destroy();
 	m_lightMapTexture.destroy();

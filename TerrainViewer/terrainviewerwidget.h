@@ -53,6 +53,18 @@ public slots:
 	 */
 	void setParameters(const Parameters& parameters);
 
+	/**
+	 * \brief Return an image of the normal texture.
+	 * \return A 8 bits RGB image of the normal texture.
+	 */
+	QImage normalTexture() const;
+
+	/**
+	 * \brief Return an image of the light map texture.
+	 * \return A 8 bits grayscale image of the light map texture.
+	 */
+	QImage lightMapTexture() const;
+
 protected:
 	void initializeGL() override;
 	void resizeGL(int w, int h) override;
@@ -99,6 +111,12 @@ private:
 	static std::vector<Patch> generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth);
 
 	/**
+	 * \brief Compute the normals of the terrain on the CPU.
+	 * \return An array of 4D vectors. The fourth component is always 0.
+	 */
+	std::vector<QVector4D> computeNormalsOnCpu() const;
+
+	/**
 	 * \brief Compute the normals of the terrain in a compute shader.
 	 * Height map and normals textures must be initialized.
 	 * Read from the height map texture and directly update the normal texture.
@@ -109,7 +127,7 @@ private:
 	 * \brief Initialize the texture storing the height of the terrain.
 	 */
 	void initTerrainTexture();
-	
+
 	/**
 	 * \brief Initialize the texture storing the normals.
 	 * Compute the normals on the shader based on the height map texture.
@@ -118,7 +136,13 @@ private:
 	 *						  False to compute on the CPU.
 	 */
 	void initNormalTexture(bool computeOnShader = true);
-	
+
+	/**
+	 * \brief Compute the coefficients of the texture storing the light map.
+	 * \return The coefficients of the light map.
+	 */
+	std::vector<float> computeLightMapTexture() const;
+
 	/**
 	 * \brief Initialize the texture storing the light map.
 	 */

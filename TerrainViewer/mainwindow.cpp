@@ -45,6 +45,36 @@ void MainWindow::loadFile()
 	}
 }
 
+void MainWindow::exportNormalMap()
+{
+	const QString filename = QFileDialog::getSaveFileName(this, tr("Save normal map"), "", tr("Images (*.png *.xpm *.jpg)"));
+
+	if (!filename.isEmpty())
+	{
+		const bool saved = ui.terrainViewerWidget->normalTexture().save(filename);
+
+		if (!saved)
+		{
+			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the normal map"));
+		}
+	}
+}
+
+void MainWindow::exportLightMap()
+{
+	const QString filename = QFileDialog::getSaveFileName(this, tr("Save light map"), "", tr("Images (*.png *.xpm *.jpg)"));
+
+	if (!filename.isEmpty())
+	{
+		const bool saved = ui.terrainViewerWidget->lightMapTexture().save(filename);
+
+		if (!saved)
+		{
+			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the normal map"));
+		}
+	}
+}
+
 void MainWindow::setupUi()
 {
 	ui.setupUi(this);
@@ -58,6 +88,8 @@ void MainWindow::setupUi()
 void MainWindow::createActions()
 {
 	connect(ui.actionLoad, &QAction::triggered, this, &MainWindow::loadFile);
+	connect(ui.actionExport_normal_map, &QAction::triggered, this, &MainWindow::exportNormalMap);
+	connect(ui.actionExport_light_map, &QAction::triggered, this, &MainWindow::exportLightMap);
 	connect(m_parameterDock, &TerrainViewer::ParameterDock::parameterChanged, [=]() {
 		ui.terrainViewerWidget->setParameters(m_parameterDock->parameters());
 	});
