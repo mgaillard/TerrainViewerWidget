@@ -1,5 +1,5 @@
 # TerrainViewerWidget
-A turnkey Qt Widget to display a terrain in 3D. Tessellation is used to efficiently display the terrain, so that it runs in real time even on low-end hardware. Tested only with Nvidia and Intel GPUs. It probably works on AMD GPUs as well.
+A turnkey Qt Widget to display a terrain in 3D. Tessellation is used to efficiently display the terrain, so that it runs in real time even on low-end hardware. A very efficient algorithm to approximate global illumination has been implemented based on this paper: *Timonen, Ville, and Jan Westerholm. "Scalable Height Field Self‐Shadowing." Computer Graphics Forum. Vol. 29. No. 2. Oxford, UK: Blackwell Publishing Ltd, 2010.* Tested only with Nvidia and Intel GPUs. It probably works on AMD GPUs as well.
 
 ![Screenshot](screenshot.png "Screenshot of the sample application")
 
