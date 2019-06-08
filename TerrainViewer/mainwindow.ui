@@ -36,6 +36,7 @@
     <addaction name="actionLoad"/>
     <addaction name="actionExport_normal_map"/>
     <addaction name="actionExport_light_map"/>
+    <addaction name="actionExport_DEM_texture"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -70,6 +71,11 @@
   <action name="actionExport_light_map">
    <property name="text">
     <string>Export light map</string>
+   </property>
+  </action>
+  <action name="actionExport_DEM_texture">
+   <property name="text">
+    <string>Export DEM texture</string>
    </property>
   </action>
  </widget>

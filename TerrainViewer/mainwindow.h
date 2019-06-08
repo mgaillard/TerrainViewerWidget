@@ -20,6 +20,8 @@ private slots:
 
 	void exportLightMap();
 
+	void exportDemTexture();
+
 private:
 	void setupUi();
 	void createActions();

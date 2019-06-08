@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
 
+#include "utils.h"
 #include "occlusion.h"
 
 using namespace TerrainViewer;
@@ -183,6 +184,29 @@ QImage TerrainViewerWidget::lightMapTexture() const
 
 			const auto gray = static_cast<uint8_t>(255.0f * (lightMap[index] / 1.0f));
 			image.setPixel(j, i, qRgb(gray, gray, gray));
+		}
+	}
+
+	return image;
+}
+
+QImage TerrainViewerWidget::demTexture() const
+{
+	const std::vector<float> lightMap = computeLightMapTexture();
+
+	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_RGB32);
+
+#pragma omp parallel for
+	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
+	{
+		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
+		{
+			const auto index = i * m_terrain.resolutionWidth() + j;
+
+			const float normalizedAltitude = m_terrain(i, j) / m_terrain.maxAltitude();
+			const auto color = colorDemScreen(normalizedAltitude);
+			const auto light = lightMap[index];
+			image.setPixel(j, i, toQRgb(color * light));
 		}
 	}
 

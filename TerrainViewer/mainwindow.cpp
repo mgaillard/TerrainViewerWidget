@@ -75,6 +75,21 @@ void MainWindow::exportLightMap()
 	}
 }
 
+void MainWindow::exportDemTexture()
+{
+	const QString filename = QFileDialog::getSaveFileName(this, tr("Save DEM texure"), "", tr("Images (*.png *.xpm *.jpg)"));
+
+	if (!filename.isEmpty())
+	{
+		const bool saved = ui.terrainViewerWidget->demTexture().save(filename);
+
+		if (!saved)
+		{
+			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the DEM texture"));
+		}
+	}
+}
+
 void MainWindow::setupUi()
 {
 	ui.setupUi(this);
@@ -90,6 +105,7 @@ void MainWindow::createActions()
 	connect(ui.actionLoad, &QAction::triggered, this, &MainWindow::loadFile);
 	connect(ui.actionExport_normal_map, &QAction::triggered, this, &MainWindow::exportNormalMap);
 	connect(ui.actionExport_light_map, &QAction::triggered, this, &MainWindow::exportLightMap);
+	connect(ui.actionExport_DEM_texture, &QAction::triggered, this, &MainWindow::exportDemTexture);
 	connect(m_parameterDock, &TerrainViewer::ParameterDock::parameterChanged, [=]() {
 		ui.terrainViewerWidget->setParameters(m_parameterDock->parameters());
 	});
