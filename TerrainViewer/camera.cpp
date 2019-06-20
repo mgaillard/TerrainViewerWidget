@@ -95,6 +95,21 @@ void Camera::roundUpDown(float angle)
 	m_up = QVector3D::crossProduct(m_eye, rotateAxis).normalized();
 }
 
+void Camera::moveLeftRight(float distance)
+{
+	const QVector3D eyeToAt(m_at - m_eye);
+	const QVector3D right = QVector3D::crossProduct(eyeToAt, m_up).normalized();
+	m_at += distance * right;
+	m_eye += distance * right;
+}
+
+void Camera::moveUpDown(float distance)
+{
+	const QVector3D up = m_up.normalized();
+	m_at += distance * up;
+	m_eye += distance * up;
+}
+
 void Camera::moveForth(float distance)
 {
 	QVector3D eyeToAt(m_at - m_eye);
@@ -102,47 +117,65 @@ void Camera::moveForth(float distance)
 	m_eye += distance * eyeToAt;
 }
 
-TrackballCamera::TrackballCamera(const QVector3D& eye,
-								 const QVector3D& at,
-								 const QVector3D& up,
-								 float fovy,
-								 float aspectRatio,
-								 float nearPlane,
-								 float farPlane) :
+OrbitCamera::OrbitCamera(const QVector3D& eye,
+						 const QVector3D& at,
+						 const QVector3D& up,
+						 float fovy,
+						 float aspectRatio,
+						 float nearPlane,
+						 float farPlane) :
 	Camera(eye, at, up, fovy, aspectRatio, nearPlane, farPlane),
-	m_motionSensitivity(0.5f),
-	m_mouseHold(false),
+	m_roundMotionSensitivity(0.5f),
+	m_moveMotionSensitivity(0.02f),
+	m_mouseLeftButtonHold(false),
+	m_mouseRightButtonHold(false),
 	m_x0(0),
 	m_y0(0)
 {
 
 }
 
-void TrackballCamera::mousePressed(int x, int y)
+void OrbitCamera::mouseLeftButtonPressed(int x, int y)
 {
-	m_mouseHold = true;
+	m_mouseLeftButtonHold = true;
+	m_mouseRightButtonHold = false;
 	m_x0 = x;
 	m_y0 = y;
 }
 
-void TrackballCamera::mouseMoved(int x, int y)
+void OrbitCamera::mouseRightButtonPressed(int x, int y)
 {
-	if (m_mouseHold)
+	m_mouseLeftButtonHold = false;
+	m_mouseRightButtonHold = true;
+	m_x0 = x;
+	m_y0 = y;
+}
+
+void OrbitCamera::mouseMoved(int x, int y)
+{
+	if (m_mouseLeftButtonHold)
 	{
-		roundLeftRight((m_x0 - x) * m_motionSensitivity);
-		roundUpDown((m_y0 - y) * m_motionSensitivity);
-
-		m_x0 = x;
-		m_y0 = y;
+		roundLeftRight((m_x0 - x) * m_roundMotionSensitivity);
+		roundUpDown((m_y0 - y) * m_roundMotionSensitivity);
 	}
+
+	if (m_mouseRightButtonHold)
+	{
+		moveLeftRight((m_x0 - x) * m_moveMotionSensitivity);
+		moveUpDown((y - m_y0) * m_moveMotionSensitivity);
+	}
+
+	m_x0 = x;
+	m_y0 = y;
 }
 
-void TrackballCamera::mouseReleased()
+void OrbitCamera::mouseReleased()
 {
-	m_mouseHold = false;
+	m_mouseLeftButtonHold = false;
+	m_mouseRightButtonHold = false;
 }
 
-void TrackballCamera::zoom(float distance)
+void OrbitCamera::zoom(float distance)
 {
 	moveForth(distance);
 }

@@ -96,6 +96,18 @@ public:
 	void roundUpDown(float angle);
 
 	/**
+	 * \brief Move the camera in the left right direction
+	 * \param distance The distance the camera will move
+	 */
+	void moveLeftRight(float distance);
+
+	/**
+	 * \brief Move the camera in the direction of the up vector
+	 * \param distance The distance the camera will move
+	 */
+	void moveUpDown(float distance);
+
+	/**
 	 * \brief Move the camera in the direction of the at point
 	 * \param distance The distance the camera will move
 	 */
@@ -112,11 +124,11 @@ private:
 	float m_far;
 };
 
-class TrackballCamera : public Camera
+class OrbitCamera : public Camera
 {
 public:
 	/**
-	 * \brief Create a Trackball Camera
+	 * \brief Create an Orbit Camera
 	 * \param eye The position of the eye
 	 * \param at The position of the at, where the camera is looking
 	 * \param up The up vector
@@ -125,20 +137,27 @@ public:
 	 * \param nearPlane Distance to the near plane
 	 * \param farPlane Distance to the far plane
 	 */
-	TrackballCamera(const QVector3D& eye,
-					const QVector3D& at,
-					const QVector3D& up,
-					float fovy,
-					float aspectRatio,
-					float nearPlane,
-					float farPlane);
+	OrbitCamera(const QVector3D& eye,
+				const QVector3D& at,
+				const QVector3D& up,
+				float fovy,
+				float aspectRatio,
+				float nearPlane,
+				float farPlane);
 
 	/**
-	 * \brief Call this function when the user press the mouse button
+	 * \brief Call this function when the user press the left mouse button
 	 * \param x X coordinates of the mouse
 	 * \param y Y coordinates of the mouse
 	 */
-	void mousePressed(int x, int y);
+	void mouseLeftButtonPressed(int x, int y);
+
+	/**
+	 * \brief Call this function when the user press the right mouse button
+	 * \param x X coordinates of the mouse
+	 * \param y Y coordinates of the mouse
+	 */
+	void mouseRightButtonPressed(int x, int y);
 
 	/**
 	 * \brief Call this function each time the user move the mouse
@@ -159,9 +178,11 @@ public:
 	void zoom(float distance);
 
 private:
-	const float m_motionSensitivity;
+	const float m_roundMotionSensitivity;
+	const float m_moveMotionSensitivity;
 
-	bool m_mouseHold;
+	bool m_mouseLeftButtonHold;
+	bool m_mouseRightButtonHold;
 	int m_x0;
 	int m_y0;
 };

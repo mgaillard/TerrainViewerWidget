@@ -355,7 +355,14 @@ void TerrainViewerWidget::mousePressEvent(QMouseEvent* event)
 	const auto x = event->globalX();
 	const auto y = event->globalY();
 
-	m_camera.mousePressed(x, y);
+	if (event->button() == Qt::LeftButton)
+	{
+		m_camera.mouseLeftButtonPressed(x, y);
+	}
+	else if (event->button() == Qt::RightButton)
+	{
+		m_camera.mouseRightButtonPressed(x, y);
+	}
 
 	update();
 }
@@ -379,9 +386,23 @@ void TerrainViewerWidget::mouseMoveEvent(QMouseEvent* event)
 
 void TerrainViewerWidget::wheelEvent(QWheelEvent* event)
 {
+	// Default speed
+	float speed = 1.0;
+
+	if (event->modifiers() & Qt::ShiftModifier)
+	{
+		// If shift is used, zooming is 4 times faster
+		speed = 4.0;
+	}
+	else if (event->modifiers() & Qt::ControlModifier)
+	{
+		// If control is used, zooming is twice slower
+		speed = 0.5;
+	}
+
 	const auto numDegrees = event->angleDelta() / 8;
 	const auto numSteps = numDegrees / 15;
-	m_camera.zoom(numSteps.y());
+	m_camera.zoom(speed * numSteps.y());
 
 	update();
 }

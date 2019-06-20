@@ -180,7 +180,7 @@ private:
 	QOpenGLTexture m_normalTexture;
 	QOpenGLTexture m_lightMapTexture;
 
-	TrackballCamera m_camera;
+	OrbitCamera m_camera;
 };
 
 }
