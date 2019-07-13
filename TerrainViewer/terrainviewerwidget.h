@@ -37,6 +37,8 @@ public:
 	TerrainViewerWidget(TerrainViewerWidget&&) = delete;
 	TerrainViewerWidget& operator=(TerrainViewerWidget&&) = delete;
 
+	const Terrain& terrain() const;
+
 public slots:
 	void cleanup();
 	void printInfo();
@@ -52,12 +54,6 @@ public slots:
 	 * \param parameters The new parameters.
 	 */
 	void setParameters(const Parameters& parameters);
-
-	/**
-	 * \brief Return an image of the normal texture.
-	 * \return A 8 bits RGB image of the normal texture.
-	 */
-	QImage normalTexture() const;
 
 	/**
 	 * \brief Return an image of the light map texture.

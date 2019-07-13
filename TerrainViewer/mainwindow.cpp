@@ -8,6 +8,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "terrain.h"
+#include "terrainimages.h"
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -51,9 +52,10 @@ void MainWindow::exportNormalMap()
 
 	if (!filename.isEmpty())
 	{
-		const bool saved = ui.terrainViewerWidget->normalTexture().save(filename);
+		const auto& terrain = ui.terrainViewerWidget->terrain();
+		const auto image = TerrainViewer::normalTextureImage(terrain);
 
-		if (!saved)
+		if (!image.save(filename))
 		{
 			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the normal map"));
 		}

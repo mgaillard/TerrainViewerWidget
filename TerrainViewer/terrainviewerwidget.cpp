@@ -43,6 +43,11 @@ TerrainViewerWidget::~TerrainViewerWidget()
 	cleanup();
 }
 
+const Terrain& TerrainViewerWidget::terrain() const
+{
+	return m_terrain;
+}
+
 void TerrainViewerWidget::cleanup()
 {
 	if (m_program)
@@ -145,29 +150,6 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 		// Parameters changed, we update the view
 		update();
 	}
-}
-
-QImage TerrainViewerWidget::normalTexture() const
-{
-	const std::vector<QVector4D> normalMap = computeNormals(m_terrain);
-
-	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_RGB32);
-
-#pragma omp parallel for
-	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
-	{
-		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
-		{
-			const auto index = i * m_terrain.resolutionWidth() + j;
-
-			const auto red   = static_cast<uint8_t>(255.0f * (normalMap[index].x() + 1.0f) / 2.0f);
-			const auto green = static_cast<uint8_t>(255.0f * (normalMap[index].y() + 1.0f) / 2.0f);
-			const auto blue  = static_cast<uint8_t>(255.0f * (normalMap[index].z() + 1.0f) / 2.0f);
-			image.setPixel(j, i, qRgb(red, green, blue));
-		}
-	}
-
-	return image;
 }
 
 QImage TerrainViewerWidget::lightMapTexture() const
