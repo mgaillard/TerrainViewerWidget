@@ -39,6 +39,8 @@ public:
 
 	const Terrain& terrain() const;
 
+	const Parameters& parameters() const;
+
 public slots:
 	void cleanup();
 	void printInfo();
@@ -54,12 +56,6 @@ public slots:
 	 * \param parameters The new parameters.
 	 */
 	void setParameters(const Parameters& parameters);
-
-	/**
-	 * \brief Return an image of the light map texture.
-	 * \return A 8 bits grayscale image of the light map texture.
-	 */
-	QImage lightMapTexture() const;
 
 	/**
 	 * \brief Return an image of the terrain texture with lighting.

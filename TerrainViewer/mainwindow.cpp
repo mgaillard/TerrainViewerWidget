@@ -68,9 +68,11 @@ void MainWindow::exportLightMap()
 
 	if (!filename.isEmpty())
 	{
-		const bool saved = ui.terrainViewerWidget->lightMapTexture().save(filename);
+		const auto& terrain = ui.terrainViewerWidget->terrain();
+		const auto& parameters = ui.terrainViewerWidget->parameters();
+		const auto image = lightMapTextureImage(terrain, parameters);
 
-		if (!saved)
+		if (!image.save(filename))
 		{
 			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the normal map"));
 		}

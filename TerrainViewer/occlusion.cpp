@@ -361,3 +361,33 @@ std::vector<float> TerrainViewer::ambientOcclusionDirectionalUniform(const Terra
 
 	return occlusion;
 }
+
+std::vector<float> TerrainViewer::computeLightMap(
+	const Terrain& terrain,
+	const std::vector<HorizonAngles>& horizonAngles,
+	const Parameters& parameters)
+{
+	std::vector<float> lightMap;
+
+	switch (parameters.shading)
+	{
+	case Shading::uniformLightBasic:
+		lightMap = ambientOcclusionBasic(terrain, horizonAngles);
+		break;
+
+	case Shading::uniformLight:
+		lightMap = ambientOcclusionUniform(terrain, horizonAngles);
+		break;
+
+	case Shading::directionalLight:
+		lightMap = ambientOcclusionDirectionalUniform(terrain, horizonAngles);
+		break;
+
+	default:
+		// By default, the light map is 1.0f everywhere
+		lightMap.resize(terrain.resolutionWidth() * terrain.resolutionHeight(), 1.0f);
+		break;
+	}
+
+	return lightMap;
+}

@@ -5,6 +5,7 @@
 #include <bitset>
 
 #include "terrain.h"
+#include "terrainviewerparameters.h"
 
 namespace TerrainViewer
 {
@@ -34,6 +35,8 @@ std::vector<float> ambientOcclusionBasic(const Terrain& terrain, const std::vect
 std::vector<float> ambientOcclusionUniform(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles);
 
 std::vector<float> ambientOcclusionDirectionalUniform(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles);
+
+std::vector<float> computeLightMap(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles, const Parameters& parameters);
 
 }
 

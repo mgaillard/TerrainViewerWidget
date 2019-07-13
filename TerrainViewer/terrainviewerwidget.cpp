@@ -48,6 +48,11 @@ const Terrain& TerrainViewerWidget::terrain() const
 	return m_terrain;
 }
 
+const Parameters& TerrainViewerWidget::parameters() const
+{
+	return m_parameters;
+}
+
 void TerrainViewerWidget::cleanup()
 {
 	if (m_program)
@@ -150,27 +155,6 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 		// Parameters changed, we update the view
 		update();
 	}
-}
-
-QImage TerrainViewerWidget::lightMapTexture() const
-{
-	const std::vector<float> lightMap = computeLightMapTexture();
-
-	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_Grayscale8);
-
-#pragma omp parallel for
-	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
-	{
-		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
-		{
-			const auto index = i * m_terrain.resolutionWidth() + j;
-
-			const auto gray = static_cast<uint8_t>(255.0f * (lightMap[index] / 1.0f));
-			image.setPixel(j, i, qRgb(gray, gray, gray));
-		}
-	}
-
-	return image;
 }
 
 QImage TerrainViewerWidget::demTexture() const
@@ -489,29 +473,7 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 
 std::vector<float> TerrainViewerWidget::computeLightMapTexture() const
 {
-	std::vector<float> lightMap;
-
-	switch (m_parameters.shading)
-	{
-	case Shading::uniformLightBasic:
-		lightMap = ambientOcclusionBasic(m_terrain, m_horizonAngles);
-		break;
-
-	case Shading::uniformLight:
-		lightMap = ambientOcclusionUniform(m_terrain, m_horizonAngles);
-		break;
-
-	case Shading::directionalLight:
-		lightMap = ambientOcclusionDirectionalUniform(m_terrain, m_horizonAngles);
-		break;
-
-	default:
-		// By default, the light map is 1.0f everywhere
-		lightMap.resize(m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), 1.0f);
-		break;
-	}
-
-	return lightMap;
+	return computeLightMap(m_terrain, m_horizonAngles, m_parameters);
 }
 
 void TerrainViewerWidget::initLightMapTexture()

@@ -5,6 +5,7 @@
 #include <QImage>
 
 #include "terrain.h"
+#include "terrainviewerparameters.h"
 
 namespace TerrainViewer
 {
@@ -20,6 +21,12 @@ std::vector<QVector4D> computeNormals(const Terrain& terrain);
  * \return A 8 bits RGB image of the normal texture.
  */
 QImage normalTextureImage(const Terrain& terrain);
+
+/**
+ * \brief Return an image of the light map texture.
+ * \return A 8 bits grayscale image of the light map texture.
+ */
+QImage lightMapTextureImage(const Terrain& terrain, const Parameters& parameters);
 
 }
 
