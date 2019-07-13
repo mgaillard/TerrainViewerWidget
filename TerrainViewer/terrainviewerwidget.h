@@ -57,12 +57,6 @@ public slots:
 	 */
 	void setParameters(const Parameters& parameters);
 
-	/**
-	 * \brief Return an image of the terrain texture with lighting.
-	 * \return A 8 bits color image of the terrain texture.
-	 */
-	QImage demTexture() const;
-
 protected:
 	void initializeGL() override;
 	void resizeGL(int w, int h) override;

@@ -85,9 +85,11 @@ void MainWindow::exportDemTexture()
 
 	if (!filename.isEmpty())
 	{
-		const bool saved = ui.terrainViewerWidget->demTexture().save(filename);
+		const auto& terrain = ui.terrainViewerWidget->terrain();
+		const auto& parameters = ui.terrainViewerWidget->parameters();
+		const auto image = demTextureImage(terrain, parameters);
 
-		if (!saved)
+		if (!image.save(filename))
 		{
 			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the DEM texture"));
 		}

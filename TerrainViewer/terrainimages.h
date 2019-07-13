@@ -28,6 +28,12 @@ QImage normalTextureImage(const Terrain& terrain);
  */
 QImage lightMapTextureImage(const Terrain& terrain, const Parameters& parameters);
 
+/**
+ * \brief Return an image of the terrain texture with lighting.
+ * \return A 8 bits color image of the terrain texture.
+ */
+QImage demTextureImage(const Terrain& terrain, const Parameters& parameters);
+
 }
 
 #endif // TERRAINIMAGES_H

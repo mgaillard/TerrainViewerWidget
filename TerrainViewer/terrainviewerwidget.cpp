@@ -157,29 +157,6 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 	}
 }
 
-QImage TerrainViewerWidget::demTexture() const
-{
-	const std::vector<float> lightMap = computeLightMapTexture();
-
-	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_RGB32);
-
-#pragma omp parallel for
-	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
-	{
-		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
-		{
-			const auto index = i * m_terrain.resolutionWidth() + j;
-
-			const float normalizedAltitude = m_terrain(i, j) / m_terrain.maxAltitude();
-			const auto color = colorDemScreen(normalizedAltitude);
-			const auto light = lightMap[index];
-			image.setPixel(j, i, toQRgb(color * light));
-		}
-	}
-
-	return image;
-}
-
 void TerrainViewerWidget::initializeGL()
 {
 	connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &TerrainViewerWidget::cleanup);
