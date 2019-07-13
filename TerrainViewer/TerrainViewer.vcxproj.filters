@@ -57,6 +57,9 @@
     <ClCompile Include="openterraindialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="terrainimages.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h">
@@ -119,6 +122,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="terrainviewerparameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="terrainimages.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

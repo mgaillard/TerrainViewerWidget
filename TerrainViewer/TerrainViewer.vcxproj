@@ -121,6 +121,7 @@
     <ClCompile Include="openterraindialog.cpp" />
     <ClCompile Include="parameterdock.cpp" />
     <ClCompile Include="terrain.cpp" />
+    <ClCompile Include="terrainimages.cpp" />
     <ClCompile Include="terrainviewerwidget.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -161,6 +162,7 @@
       <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtWidgets;$(OPENCVDIR)\build\include</IncludePath>
     </QtMoc>
     <ClInclude Include="terrain.h" />
+    <ClInclude Include="terrainimages.h" />
     <ClInclude Include="terrainviewerparameters.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>

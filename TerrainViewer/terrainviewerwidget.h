@@ -117,12 +117,6 @@ private:
 	static std::vector<Patch> generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth);
 
 	/**
-	 * \brief Compute the normals of the terrain on the CPU.
-	 * \return An array of 4D vectors. The fourth component is always 0.
-	 */
-	std::vector<QVector4D> computeNormalsOnCpu() const;
-
-	/**
 	 * \brief Compute the normals of the terrain in a compute shader.
 	 * Height map and normals textures must be initialized.
 	 * Read from the height map texture and directly update the normal texture.

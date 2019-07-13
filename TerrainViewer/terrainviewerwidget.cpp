@@ -7,6 +7,7 @@
 #include <QOpenGLShaderProgram>
 
 #include "utils.h"
+#include "terrainimages.h"
 #include "occlusion.h"
 
 using namespace TerrainViewer;
@@ -148,7 +149,7 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 
 QImage TerrainViewerWidget::normalTexture() const
 {
-	const std::vector<QVector4D> normalMap = computeNormalsOnCpu();
+	const std::vector<QVector4D> normalMap = computeNormals(m_terrain);
 
 	QImage image(m_terrain.resolutionWidth(), m_terrain.resolutionHeight(), QImage::Format_RGB32);
 
@@ -429,28 +430,6 @@ std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(flo
 	return patches;
 }
 
-std::vector<QVector4D> TerrainViewerWidget::computeNormalsOnCpu() const
-{
-	std::vector<QVector4D> normals(m_terrain.resolutionWidth() * m_terrain.resolutionHeight());
-
-#pragma omp parallel for
-	for (int i = 0; i < m_terrain.resolutionHeight(); i++)
-	{
-		for (int j = 0; j < m_terrain.resolutionWidth(); j++)
-		{
-			const auto index = i * m_terrain.resolutionWidth() + j;
-
-			const QVector3D normal = m_terrain.normal(i, j).normalized();
-			normals[index].setX(normal.x());
-			normals[index].setY(normal.y());
-			normals[index].setZ(normal.z());
-			normals[index].setW(0.0);
-		}
-	}
-
-	return normals;
-}
-
 void TerrainViewerWidget::computeNormalsOnShader()
 {
 	// Local size in the compute shader
@@ -520,7 +499,7 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 	}
 	else
 	{
-		const std::vector<QVector4D> normals = computeNormalsOnCpu();
+		const std::vector<QVector4D> normals = computeNormals(m_terrain);
 
 		m_normalTexture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, normals.data());
 	}	
