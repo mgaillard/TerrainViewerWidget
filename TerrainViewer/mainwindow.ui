@@ -34,16 +34,22 @@
      <string>File</string>
     </property>
     <addaction name="actionLoad"/>
-    <addaction name="actionExport_normal_map"/>
-    <addaction name="actionExport_light_map"/>
-    <addaction name="actionExport_DEM_texture"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
      <string>Window</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuExport">
+    <property name="title">
+     <string>Export</string>
+    </property>
+    <addaction name="actionExport_normal_map"/>
+    <addaction name="actionExport_light_map"/>
+    <addaction name="actionExport_DEM_texture"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuExport"/>
    <addaction name="menuWindow"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
