@@ -36,6 +36,10 @@ std::vector<float> ambientOcclusionUniform(const Terrain& terrain, const std::ve
 
 std::vector<float> ambientOcclusionDirectionalUniform(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles);
 
+/**
+ * \brief Compute the coefficients of the texture storing the light map.
+ * \return The coefficients of the light map.
+ */
 std::vector<float> computeLightMap(const Terrain& terrain, const std::vector<HorizonAngles>& horizonAngles, const Parameters& parameters);
 
 }

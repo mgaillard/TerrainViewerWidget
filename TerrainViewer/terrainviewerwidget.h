@@ -124,12 +124,6 @@ private:
 	void initNormalTexture(bool computeOnShader = true);
 
 	/**
-	 * \brief Compute the coefficients of the texture storing the light map.
-	 * \return The coefficients of the light map.
-	 */
-	std::vector<float> computeLightMapTexture() const;
-
-	/**
 	 * \brief Initialize the texture storing the light map.
 	 */
 	void initLightMapTexture();

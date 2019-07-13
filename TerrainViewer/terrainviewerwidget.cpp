@@ -448,14 +448,9 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 	}	
 }
 
-std::vector<float> TerrainViewerWidget::computeLightMapTexture() const
-{
-	return computeLightMap(m_terrain, m_horizonAngles, m_parameters);
-}
-
 void TerrainViewerWidget::initLightMapTexture()
 {
-	const std::vector<float> lightMap = computeLightMapTexture();
+	const std::vector<float> lightMap = computeLightMap(m_terrain, m_horizonAngles, m_parameters);
 
 	m_lightMapTexture.destroy();
 	m_lightMapTexture.destroy();
