@@ -7,6 +7,7 @@
 #include <QOpenGLShaderProgram>
 
 #include "utils.h"
+#include "tessellation_utils.h"
 #include "terrainimages.h"
 #include "occlusion.h"
 
@@ -116,11 +117,12 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	m_numberPatchesHeight = std::max(1, m_terrain.resolutionHeight() / 32);
 	m_numberPatchesWidth = std::max(1, m_terrain.resolutionWidth() / 32);
 	m_numberPatches = m_numberPatchesWidth * m_numberPatchesHeight;
-	auto patches = generatePatches(m_terrain.height(), m_terrain.width(), m_numberPatchesHeight, m_numberPatchesWidth);
+	auto patches = generateTessellationPatches(m_terrain.height(), m_terrain.width(),
+											   m_numberPatchesHeight, m_numberPatchesWidth);
 
 	// Update the vbo
 	m_vbo.bind();
-	m_vbo.allocate(patches.data(), patches.size() * sizeof(Patch));
+	m_vbo.allocate(patches.data(), patches.size() * sizeof(TessellationPatch));
 	m_vbo.release();
 
 	// Precompute the horizon angles
@@ -349,28 +351,6 @@ void TerrainViewerWidget::wheelEvent(QWheelEvent* event)
 	m_camera.zoom(speed * numSteps.y());
 
 	update();
-}
-
-std::vector<TerrainViewerWidget::Patch> TerrainViewerWidget::generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth)
-{
-	const auto numberPatches = numberPatchesHeight * numberPatchesWidth;
-	const auto patchSizeHeight = height / numberPatchesHeight;
-	const auto patchSizeWidth = width / numberPatchesWidth;
-
-	std::vector<Patch> patches;
-	patches.reserve(numberPatches);
-	for (auto i = 0; i < numberPatchesHeight; i++)
-	{
-		for (auto j = 0; j < numberPatchesWidth; j++)
-		{
-			const auto x = patchSizeHeight * i;
-			const auto y = patchSizeWidth * j;
-
-			patches.emplace_back(x, y, patchSizeHeight, patchSizeWidth);
-		}
-	}
-
-	return patches;
 }
 
 void TerrainViewerWidget::computeNormalsOnShader()

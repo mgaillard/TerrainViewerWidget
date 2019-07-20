@@ -123,6 +123,7 @@
     <ClCompile Include="terrain.cpp" />
     <ClCompile Include="terrainimages.cpp" />
     <ClCompile Include="terrainviewerwidget.cpp" />
+    <ClCompile Include="tessellation_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="mainwindow.h" />
@@ -164,6 +165,7 @@
     <ClInclude Include="terrain.h" />
     <ClInclude Include="terrainimages.h" />
     <ClInclude Include="terrainviewerparameters.h" />
+    <ClInclude Include="tessellation_utils.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

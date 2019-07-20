@@ -67,41 +67,6 @@ protected:
 	void wheelEvent(QWheelEvent* event) override;
 
 private:
-
-	/**
-	 * \brief A private type to temporarily store a vertex sent to OpenGL.
-	 */
-	struct Vertex
-	{
-		GLfloat x, y, z;
-	};
-
-	/**
-	 * \brief A private type to temporarily store a patch sent to OpenGL.
-	 */
-	struct Patch
-	{
-		Vertex v[4];
-
-		Patch(const GLfloat x, const GLfloat y, const GLfloat sizeX, const GLfloat sizeY)
-		{
-			v[0] = { x        , y        , 0.0 };
-			v[1] = { x + sizeX, y        , 0.0 };
-			v[2] = { x + sizeX, y + sizeY, 0.0 };
-			v[3] = { x        , y + sizeY, 0.0 };
-		}
-	};
-
-	/**
-	 * \brief Generate patches for the tessellation shader.
-	 * \param height Height of the terrain.
-	 * \param width Width of the terrain.
-	 * \param numberPatchesHeight Number of patches in the height axis.
-	 * \param numberPatchesWidth Number of patches in the width axis.
-	 * \return A vector of patches for the tessellation shader.
-	 */
-	static std::vector<Patch> generatePatches(float height, float width, int numberPatchesHeight, int numberPatchesWidth);
-
 	/**
 	 * \brief Compute the normals of the terrain in a compute shader.
 	 * Height map and normals textures must be initialized.
