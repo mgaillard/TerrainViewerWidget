@@ -110,12 +110,14 @@ void TerrainViewerWidget::printInfo()
 bool TerrainViewerWidget::reloadShaderPrograms()
 {
 	bool success = true;
-	
+
+	const QString shader_dir = ":/MainWindow/Shaders/";
+
 	if (m_computeNormalsProgram)
 	{
 		m_computeNormalsProgram->removeAllShaders();
 
-		m_computeNormalsProgram->addShaderFromSourceFile(QOpenGLShader::Compute, ":/MainWindow/Shaders/compute_normals.glsl");
+		m_computeNormalsProgram->addShaderFromSourceFile(QOpenGLShader::Compute, shader_dir + "compute_normals.glsl");
 		
 		success &= m_computeNormalsProgram->link();
 	}
@@ -124,10 +126,10 @@ bool TerrainViewerWidget::reloadShaderPrograms()
 	{
 		m_program->removeAllShaders();
 
-		m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/MainWindow/Shaders/vertex_shader.glsl");
-		m_program->addShaderFromSourceFile(QOpenGLShader::TessellationControl, ":/MainWindow/Shaders/tessellation_control.glsl");
-		m_program->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation, ":/MainWindow/Shaders/tessellation_evaluation.glsl");
-		m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/MainWindow/Shaders/fragment_shader.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, shader_dir + "vertex_shader.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::TessellationControl, shader_dir + "tessellation_control.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation, shader_dir + "tessellation_evaluation.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, shader_dir + "fragment_shader.glsl");
 		
 		success &= m_program->link();
 	}
