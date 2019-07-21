@@ -46,6 +46,12 @@ public slots:
 	void printInfo();
 
 	/**
+	 * \brief Reload shader programs.
+	 * \return True if shader programs compiled successfully, false otherwise.
+	 */
+	bool reloadShaderPrograms();
+
+	/**
 	 * \brief Load and display a terrain in the widget. The terrain cannot be empty.
 	 * \param terrain A non empty terrain.
 	 */

@@ -12,7 +12,7 @@ uniform struct Terrain
 	float max_altitude;
 } terrain;
 
-in vec3 pos_attrib;
+layout(location = 0) in vec3 pos_attrib;
 
 float height(const vec2 p)
 {

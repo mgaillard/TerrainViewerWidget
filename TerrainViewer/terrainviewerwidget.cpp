@@ -107,6 +107,34 @@ void TerrainViewerWidget::printInfo()
 	qDebug() << "Maximum number of invocations in a single local work group: " << workgroupInvocations;
 }
 
+bool TerrainViewerWidget::reloadShaderPrograms()
+{
+	bool success = true;
+	
+	if (m_computeNormalsProgram)
+	{
+		m_computeNormalsProgram->removeAllShaders();
+
+		m_computeNormalsProgram->addShaderFromSourceFile(QOpenGLShader::Compute, ":/MainWindow/Shaders/compute_normals.glsl");
+		
+		success &= m_computeNormalsProgram->link();
+	}
+
+	if (m_program)
+	{
+		m_program->removeAllShaders();
+
+		m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/MainWindow/Shaders/vertex_shader.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::TessellationControl, ":/MainWindow/Shaders/tessellation_control.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation, ":/MainWindow/Shaders/tessellation_evaluation.glsl");
+		m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/MainWindow/Shaders/fragment_shader.glsl");
+		
+		success &= m_program->link();
+	}
+
+	return success;
+}
+
 void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 {
 	assert(!terrain.empty());
@@ -165,21 +193,12 @@ void TerrainViewerWidget::initializeGL()
 
 	initializeOpenGLFunctions();
 	m_logger->initialize();
-	glClearColor(0.5, 0.5, 0.5, 1.0);	
-
-	const auto posLoc = 0;
+	glClearColor(0.5, 0.5, 0.5, 1.0);
 
 	m_computeNormalsProgram = std::make_unique<QOpenGLShaderProgram>();
-	m_computeNormalsProgram->addShaderFromSourceFile(QOpenGLShader::Compute, ":/MainWindow/Shaders/compute_normals.glsl");
-	m_computeNormalsProgram->link();
-
 	m_program = std::make_unique<QOpenGLShaderProgram>();
-	m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/MainWindow/Shaders/vertex_shader.glsl");
-	m_program->addShaderFromSourceFile(QOpenGLShader::TessellationControl, ":/MainWindow/Shaders/tessellation_control.glsl");
-	m_program->addShaderFromSourceFile(QOpenGLShader::TessellationEvaluation, ":/MainWindow/Shaders/tessellation_evaluation.glsl");
-	m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/MainWindow/Shaders/fragment_shader.glsl");
-	m_program->bindAttributeLocation("pos_attrib", posLoc);
-	m_program->link();
+
+	reloadShaderPrograms();
 
 	m_program->bind();
 
@@ -190,6 +209,7 @@ void TerrainViewerWidget::initializeGL()
 	m_vbo.create();
 	m_vbo.bind();
 
+	const auto posLoc = 0;
 	// Enable attributes
 	m_program->enableAttributeArray(posLoc);
 	// Tell OpenGL how to get the attribute values out of the vbo (stride and offset).
