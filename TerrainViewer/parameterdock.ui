@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>240</width>
+    <width>254</width>
     <height>260</height>
    </rect>
   </property>
@@ -39,6 +39,11 @@
         <string>DEM Screen</string>
        </property>
       </item>
+      <item>
+       <property name="text">
+        <string>Environment</string>
+       </property>
+      </item>
      </widget>
     </item>
     <item row="1" column="0">
@@ -68,6 +73,11 @@
       <item>
        <property name="text">
         <string>Directional Light</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Slope</string>
        </property>
       </item>
      </widget>

@@ -11,7 +11,8 @@ enum class Palette
 {
 	texture = 0,
 	white = 1,
-	demScreen = 2
+	demScreen = 2,
+	environment = 3
 };
 
 /**
@@ -22,7 +23,8 @@ enum class Shading
 	normal = 0,
 	uniformLightBasic = 1,
 	uniformLight = 2,
-	directionalLight = 3
+	directionalLight = 3,
+	slope = 4
 };
 
 /**
