@@ -178,6 +178,14 @@ int Terrain::resolutionHeight() const
 	return m_resolutionHeight;
 }
 
+int Terrain::cellIndex(int i, int j) const
+{
+	assert(i >= 0 && i < m_resolutionHeight);
+	assert(j >= 0 && j < m_resolutionWidth);
+
+	return i * m_resolutionWidth + j;
+}
+
 const float& Terrain::operator()(int i, int j) const
 {
 	assert(i >= 0 && i < m_resolutionHeight);

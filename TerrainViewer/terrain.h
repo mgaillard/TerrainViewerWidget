@@ -103,6 +103,14 @@ public:
 	int resolutionHeight() const;
 
 	/**
+	 * \brief Return the index in a 1D row major array of a cell
+	 * \param i Vertex Y coordinate (height axis)
+	 * \param j Vertex X coordinate (width axis)
+	 * \return The index of the cell
+	 */
+	int cellIndex(int i, int j) const;
+
+	/**
 	 * \brief Get access to the altitude of a vertex
 	 * \param i Vertex Y coordinate (height axis)
 	 * \param j Vertex X coordinate (width axis)
