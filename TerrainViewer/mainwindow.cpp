@@ -2,6 +2,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QTimer>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -94,6 +95,27 @@ void MainWindow::exportDemTexture()
 			QMessageBox::critical(this, tr("Error while saving"), tr("Impossible to save the DEM texture"));
 		}
 	}
+}
+
+void MainWindow::resetViewerWidget()
+{
+	const auto camera = ui.terrainViewerWidget->camera();
+	const auto terrain = ui.terrainViewerWidget->terrain();
+
+	// Delete current viewer widget
+	ui.terrainViewerWidget->cleanup();
+	ui.terrainViewerWidget->deleteLater();
+
+	// Create a new viewer widget
+	ui.terrainViewerWidget = new TerrainViewer::TerrainViewerWidget(ui.centralWidget);
+	ui.verticalLayout->addWidget(ui.terrainViewerWidget);
+
+	// Keep the same parameters in the new widget
+	QTimer::singleShot(0, this, [this, camera, terrain]() {
+		ui.terrainViewerWidget->setCamera(camera);
+		ui.terrainViewerWidget->loadTerrain(terrain);
+		ui.terrainViewerWidget->setParameters(m_parameterDock->parameters());
+	});
 }
 
 void MainWindow::setupUi()

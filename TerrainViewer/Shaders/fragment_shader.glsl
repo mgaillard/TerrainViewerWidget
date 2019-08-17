@@ -138,24 +138,62 @@ vec3 elevation_ramp_europe(const float t)
 		}
 	}
 
-	return color[5];
+	return color[62];
+}
+
+// Elevation color ramp with t in [0, 1]
+vec3 elevation_ramp_speed(const float t)
+{
+	// Gradient name: "Speed"
+	// Source: http://soliton.vm.bytemark.co.uk/pub/cpt-city/cmocean/speed.svg
+	const float offset[8] = float[](
+		0.000, 0.143, 0.286, 0.429,
+		0.571, 0.714, 0.857, 1.000
+	);
+	const vec3 color[8] = vec3[](
+		vec3(201, 186, 69) / 255.0, vec3(178, 175, 40) / 255.0, vec3(152, 165, 18) / 255.0, vec3(124, 156, 6) / 255.0,
+		vec3(95, 146, 12) / 255.0, vec3(66, 135, 25) / 255.0, vec3(39, 123, 35) / 255.0, vec3(17, 109, 42) / 255.0
+	);
+
+	for (int i = 0; i < 7; i++)
+	{
+		if (t >= offset[i] && t < offset[i + 1])
+		{
+			const float s = (t - offset[i]) / (offset[i + 1] - offset[i]);
+			return mix(color[i], color[i + 1], s);
+		}
+	}
+
+	return color[7];
 }
 
 vec3 compute_color_environment(const float altitude, const float slope, const float light)
 {
-	// Ramp altitude for the basic color
-	const vec3 color = elevation_ramp_europe(altitude);
-
-	// Color of snow
 	const vec3 snow_color = vec3(0.95, 0.95, 0.95);
-	// If altitude is more than 0.65 => snow
-	const float snow_altitude_factor = smoothstep(0.65, 0.85, altitude);
-	// If slope is less than 0.35 => snow
-	const float snow_slope_factor = 1.0 - smoothstep(0.45, 0.75, slope);
-	// Combine all three factors
-	const float snow_factor = snow_altitude_factor * snow_slope_factor;
+	const vec3 mountain_rock_color = vec3(0.5, 0.5, 0.5);
+	const vec3 plane_rock_color = vec3(0.5, 0.5, 0.5);
+	const vec3 plane_dirt_color = vec3(0.608, 0.463, 0.325);
 
-	return mix(color, snow_color, snow_factor);
+	// If altitude is more than 0.75 => mountain
+	const float mountain_altitude_factor = smoothstep(0.70, 0.80, altitude);
+	// If slope is less than 0.25 => snow
+	const float snow_slope_factor = 1.0 - smoothstep(0.25, 0.45, slope);
+	// Color in the mountain region
+	const vec3 mountain_color = mix(mountain_rock_color, snow_color, snow_slope_factor);
+
+	// If altitude is less than 0.75 => plane
+	const float plane_altitude_factor = 1.0 - mountain_altitude_factor;
+	// If slope is less than 0.20 => grass
+	const float grass_slope_factor = 1.0 - smoothstep(0.20, 0.30, slope);
+	// If slope is more than 0.20 => dirt + rock
+	const float dirt_rock_slope_factor = smoothstep(0.45, 0.55, slope);
+	const vec3 plane_dirt_rock_color = mix(plane_dirt_color, plane_rock_color, dirt_rock_slope_factor);
+	const vec3 plane_grass_color = elevation_ramp_speed(altitude);
+	// Color in the plane region
+	const vec3 plane_color = mix(plane_dirt_rock_color, plane_grass_color, grass_slope_factor);
+
+	return plane_altitude_factor * plane_color
+	     + mountain_altitude_factor * mountain_color;
 }
 
 float compute_normalized_altitude()

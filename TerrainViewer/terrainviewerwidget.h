@@ -39,6 +39,8 @@ public:
 
 	const Terrain& terrain() const;
 
+	const OrbitCamera& camera() const;
+
 	const Parameters& parameters() const;
 
 public slots:
@@ -56,6 +58,12 @@ public slots:
 	 * \param terrain A non empty terrain.
 	 */
 	void loadTerrain(const Terrain& terrain);
+
+	/**
+	 * \brief Set the camera
+	 * \param camera The new camera
+	 */
+	void setCamera(const OrbitCamera& camera);
 
 	/**
 	 * \brief Change the parameters of the widget.

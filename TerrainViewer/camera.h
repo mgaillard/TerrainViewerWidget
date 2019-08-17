@@ -178,8 +178,8 @@ public:
 	void zoom(float distance);
 
 private:
-	const float m_roundMotionSensitivity;
-	const float m_moveMotionSensitivity;
+	float m_roundMotionSensitivity;
+	float m_moveMotionSensitivity;
 
 	bool m_mouseLeftButtonHold;
 	bool m_mouseRightButtonHold;

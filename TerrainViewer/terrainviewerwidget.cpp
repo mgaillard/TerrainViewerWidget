@@ -49,6 +49,11 @@ const Terrain& TerrainViewerWidget::terrain() const
 	return m_terrain;
 }
 
+const OrbitCamera& TerrainViewerWidget::camera() const
+{
+	return m_camera;
+}
+
 const Parameters& TerrainViewerWidget::parameters() const
 {
 	return m_parameters;
@@ -164,6 +169,11 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	initLightMapTexture();
 
 	update();
+}
+
+void TerrainViewerWidget::setCamera(const OrbitCamera& camera)
+{
+	m_camera = camera;
 }
 
 void TerrainViewerWidget::setParameters(const Parameters& parameters)

@@ -22,6 +22,8 @@ private slots:
 
 	void exportDemTexture();
 
+	void resetViewerWidget();
+
 private:
 	void setupUi();
 	void createActions();
