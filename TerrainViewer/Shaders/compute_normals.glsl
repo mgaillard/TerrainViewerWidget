@@ -3,10 +3,16 @@
 layout (local_size_x = 4, local_size_y = 4) in;
 
 layout (r32f, binding = 0) uniform image2D heightmap;
-layout (rgba32f, binding = 1) uniform image2D normals;
+layout (r32f, binding = 1) uniform image2D watermap;
+layout (rgba32f, binding = 2) uniform image2D normals;
 
 uniform float terrain_height;
 uniform float terrain_width;
+
+float altitude(ivec2 coords)
+{
+	return imageLoad(heightmap, coords).r + imageLoad(watermap, coords).r;
+}
 
 // Compute the normals in heightmap and output the result in normals
 void main()
@@ -24,10 +30,10 @@ void main()
 	// If within the interior of the terrain
 	if (all(greaterThan(coords, ivec2(0, 0))) && all(lessThan(coords, terrainSize - ivec2(1, 1))))
 	{
-		const float top = imageLoad(heightmap, coords + ivec2(0, -1)).r;
-		const float bottom = imageLoad(heightmap, coords + ivec2(0, 1)).r;
-		const float left = imageLoad(heightmap, coords + ivec2(-1, 0)).r;
-		const float right = imageLoad(heightmap, coords + ivec2(1, 0)).r;
+		const float top = altitude(coords + ivec2(0, -1));
+		const float bottom = altitude(coords + ivec2(0, 1));
+		const float left = altitude(coords + ivec2(-1, 0));
+		const float right = altitude(coords + ivec2(1, 0));
 
 		const float stepX = terrain_width / (terrainSize.x - 1);
 		const float stepY = terrain_height / (terrainSize.y - 1);

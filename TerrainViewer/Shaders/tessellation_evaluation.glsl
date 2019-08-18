@@ -12,6 +12,7 @@ uniform struct Terrain
 	sampler2D height_texture;
 	sampler2D normal_texture;
 	sampler2D lightMap_texture;
+	sampler2D waterMap_texture;
 	float height;
 	float width;
 	int resolution_height;
@@ -28,31 +29,15 @@ out vec3 normal_world;
 float height(const vec2 p)
 {
 	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
-	return texture(terrain.height_texture, texcoord).s;
+	const float terrain_height = texture(terrain.height_texture, texcoord).s;
+	const float water_height = texture(terrain.waterMap_texture, texcoord).s;
+	return terrain_height + water_height;
 }
 
 vec3 normal(const vec2 p)
 {
 	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
 	return normalize(texture(terrain.normal_texture, texcoord).stp);
-}
-
-vec3 compute_normal(const vec2 p)
-{
-	const vec2 texcoord = vec2(p.x / terrain.width, p.y / terrain.height);
-
-	const float left = textureOffset(terrain.height_texture, texcoord, ivec2(-1, 0)).s;
-	const float right = textureOffset(terrain.height_texture, texcoord, ivec2(1, 0)).s;
-	const float bottom = textureOffset(terrain.height_texture, texcoord, ivec2(0, -1)).s;
-	const float top = textureOffset(terrain.height_texture, texcoord, ivec2(0, 1)).s;
-
-	const float step_width = terrain.width / (terrain.resolution_width - 1.0);
-	const float step_height = terrain.height / (terrain.resolution_height - 1.0);
-
-	const float dhdx = (right - left) / (2.0 * step_width);
-	const float dhdy = (top - bottom) / (2.0 * step_height);
-
-	return normalize(vec3(-dhdx, -dhdy, 1.0));
 }
 
 void main()

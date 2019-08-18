@@ -59,6 +59,8 @@ public slots:
 	 */
 	void loadTerrain(const Terrain& terrain);
 
+	void setWaterLevel(const std::vector<float>& waterMap);
+
 	/**
 	 * \brief Set the camera
 	 * \param camera The new camera
@@ -97,15 +99,16 @@ private:
 	 * \brief Initialize the texture storing the normals.
 	 * Compute the normals on the shader based on the height map texture.
 	 * Height map texture must be initialized.
-	 * \param computeOnShader True to compute the normals on the GPU using a compute shader.
-	 *						  False to compute on the CPU.
 	 */
-	void initNormalTexture(bool computeOnShader = true);
+	void initNormalTexture();
 
 	/**
 	 * \brief Initialize the texture storing the light map.
 	 */
 	void initLightMapTexture();
+
+	void initWaterMapTexture();
+	void initWaterMapTexture(const std::vector<float>& waterMap);
 
 	/**
 	 * \brief Update the uniform variables in the shader that are given as parameters.
@@ -132,6 +135,7 @@ private:
 	QOpenGLTexture m_heightTexture;
 	QOpenGLTexture m_normalTexture;
 	QOpenGLTexture m_lightMapTexture;
+	QOpenGLTexture m_waterMapTexture;
 
 	OrbitCamera m_camera;
 };

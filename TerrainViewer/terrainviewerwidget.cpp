@@ -34,6 +34,7 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_heightTexture(QOpenGLTexture::Target2D),
 	m_normalTexture(QOpenGLTexture::Target2D),
 	m_lightMapTexture(QOpenGLTexture::Target2D),
+	m_waterMapTexture(QOpenGLTexture::Target2D),
 	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
 {
 	
@@ -165,8 +166,17 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 	
 	// Init the textures storing the information of the terrain
 	initTerrainTexture();
+	initWaterMapTexture();
 	initNormalTexture();
 	initLightMapTexture();
+
+	update();
+}
+
+void TerrainViewerWidget::setWaterLevel(const std::vector<float>& waterMap)
+{
+	initWaterMapTexture(waterMap);
+	initNormalTexture();
 
 	update();
 }
@@ -303,6 +313,11 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("terrain.lightMap_texture", lightMapTextureUnit);
 		m_lightMapTexture.bind(lightMapTextureUnit);
 
+		// Bind the water-map texture
+		const auto waterMapTextureUnit = 3;
+		m_program->setUniformValue("terrain.waterMap_texture", waterMapTextureUnit);
+		m_waterMapTexture.bind(waterMapTextureUnit);
+
 		// Bind the VAO containing the patches
 		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
 
@@ -403,8 +418,11 @@ void TerrainViewerWidget::computeNormalsOnShader()
 		const auto heightImageUnit = 0;
 		glBindImageTexture(heightImageUnit, m_heightTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
+		const auto waterImageUnit = 1;
+		glBindImageTexture(waterImageUnit, m_waterMapTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+		
 		// Bind the normal texture as an image
-		const auto normalImageUnit = 1;
+		const auto normalImageUnit = 2;
 		glBindImageTexture(normalImageUnit, m_normalTexture.textureId(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 		// Compute the number of blocks in each dimensions
@@ -435,7 +453,7 @@ void TerrainViewerWidget::initTerrainTexture()
 	m_heightTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
 }
 
-void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
+void TerrainViewerWidget::initNormalTexture()
 {
 	m_normalTexture.destroy();
 	m_normalTexture.destroy();
@@ -447,17 +465,8 @@ void TerrainViewerWidget::initNormalTexture(bool computeOnShader)
 	m_normalTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_normalTexture.allocateStorage();
 
-	if (computeOnShader)
-	{
-		// Compute the normals on the GPU with the compute shader
-		computeNormalsOnShader();
-	}
-	else
-	{
-		const std::vector<QVector4D> normals = computeNormals(m_terrain);
-
-		m_normalTexture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, normals.data());
-	}	
+	// Compute the normals on the GPU with the compute shader
+	computeNormalsOnShader();	
 }
 
 void TerrainViewerWidget::initLightMapTexture()
@@ -474,6 +483,26 @@ void TerrainViewerWidget::initLightMapTexture()
 	m_lightMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_lightMapTexture.allocateStorage();
 	m_lightMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, lightMap.data());
+}
+
+void TerrainViewerWidget::initWaterMapTexture()
+{
+	const std::vector<float> emptyWaterMap(m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), 0.0);
+	initWaterMapTexture(emptyWaterMap);
+}
+
+void TerrainViewerWidget::initWaterMapTexture(const std::vector<float>& waterMap)
+{
+	m_waterMapTexture.destroy();
+	m_waterMapTexture.destroy();
+	m_waterMapTexture.create();
+	m_waterMapTexture.setFormat(QOpenGLTexture::R32F);
+	m_waterMapTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_waterMapTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_waterMapTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_waterMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_waterMapTexture.allocateStorage();
+	m_waterMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, waterMap.data());
 }
 
 void TerrainViewerWidget::updateParameters()

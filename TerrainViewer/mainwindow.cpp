@@ -10,6 +10,7 @@
 
 #include "terrain.h"
 #include "terrainimages.h"
+#include "openterraindialog.h"
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -118,6 +119,18 @@ void MainWindow::resetViewerWidget()
 	});
 }
 
+void MainWindow::initWaterSimulation()
+{
+	m_waterSimulation.initSimulation(ui.terrainViewerWidget->terrain());
+	ui.terrainViewerWidget->setWaterLevel(m_waterSimulation.waterMap());
+}
+
+void MainWindow::updateWaterSimulation()
+{
+	m_waterSimulation.computeIteration();
+	ui.terrainViewerWidget->setWaterLevel(m_waterSimulation.waterMap());
+}
+
 void MainWindow::setupUi()
 {
 	ui.setupUi(this);
@@ -134,6 +147,8 @@ void MainWindow::createActions()
 	connect(ui.actionExport_normal_map, &QAction::triggered, this, &MainWindow::exportNormalMap);
 	connect(ui.actionExport_light_map, &QAction::triggered, this, &MainWindow::exportLightMap);
 	connect(ui.actionExport_DEM_texture, &QAction::triggered, this, &MainWindow::exportDemTexture);
+	connect(ui.actionInitialize_water, &QAction::triggered, this, &MainWindow::initWaterSimulation);
+	connect(ui.actionUpdate_water, &QAction::triggered, this, &MainWindow::updateWaterSimulation);
 	connect(m_parameterDock, &TerrainViewer::ParameterDock::parameterChanged, [=]() {
 		ui.terrainViewerWidget->setParameters(m_parameterDock->parameters());
 	});

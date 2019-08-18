@@ -5,6 +5,7 @@ uniform struct Terrain
 	sampler2D height_texture;
 	sampler2D normal_texture;
 	sampler2D lightMap_texture;
+	sampler2D waterMap_texture;
 	float height;
 	float width;
 	int resolution_height;
@@ -167,7 +168,7 @@ vec3 elevation_ramp_speed(const float t)
 	return color[7];
 }
 
-vec3 compute_color_environment(const float altitude, const float slope, const float light)
+vec3 compute_color_environment(const float altitude, const float slope, const float light, const float water)
 {
 	const vec3 snow_color = vec3(0.95, 0.95, 0.95);
 	const vec3 mountain_rock_color = vec3(0.5, 0.5, 0.5);
@@ -192,8 +193,7 @@ vec3 compute_color_environment(const float altitude, const float slope, const fl
 	// Color in the plane region
 	const vec3 plane_color = mix(plane_dirt_rock_color, plane_grass_color, grass_slope_factor);
 
-	return plane_altitude_factor * plane_color
-	     + mountain_altitude_factor * mountain_color;
+	return plane_altitude_factor * plane_color + mountain_altitude_factor * mountain_color;
 }
 
 float compute_normalized_altitude()
@@ -213,10 +213,21 @@ float compute_occlusion()
 	return texture(terrain.lightMap_texture, texcoord).s;
 }
 
+float compute_water()
+{
+	const vec2 texcoord = vec2(position_model.x / terrain.width, position_model.y / terrain.height);
+	return texture(terrain.waterMap_texture, texcoord).s;
+}
+
 // Compute the color of the fragment by choosing
 // the right color palette
-vec3 compute_color(const float altitude, const float slope, const float light)
+vec3 compute_color(const float altitude, const float slope, const float light, const float water)
 {
+	if (water > 1e-2)
+	{
+		return vec3(0.0, 0.0, 1.0);
+	}
+
 	switch(palette)
 	{
 	case PaletteWhite:
@@ -228,7 +239,7 @@ vec3 compute_color(const float altitude, const float slope, const float light)
 		break;
 
 	case PaletteEnvironment:
-		return compute_color_environment(altitude, slope, light);
+		return compute_color_environment(altitude, slope, light, water);
 		break;
 	}
 
@@ -244,7 +255,8 @@ vec3 shading_normal()
 	const float normalized_altitude = compute_normalized_altitude();
 	const float slope = compute_slope();
 	const float normal_term = max(0.0, dot(normal_world, light_direction));
-	const vec3 color = compute_color(normalized_altitude, slope, normal_term);
+	const float water = compute_water();
+	const vec3 color = compute_color(normalized_altitude, slope, normal_term, water);
 
 	return color * (0.25  + 0.75 * normal_term);
 }
@@ -263,7 +275,8 @@ vec3 shading_occlusion()
 	const float normalized_altitude = compute_normalized_altitude();
 	const float slope = compute_slope();
 	const float occlusion = compute_occlusion();
-	const vec3 color = compute_color(normalized_altitude, slope, occlusion);
+	const float water = compute_water();
+	const vec3 color = compute_color(normalized_altitude, slope, occlusion, water);
 
 	return color * occlusion;
 }

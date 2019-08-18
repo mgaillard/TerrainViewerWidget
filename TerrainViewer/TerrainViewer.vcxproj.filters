@@ -63,7 +63,7 @@
     <ClCompile Include="tessellation_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="flow.cpp">
+    <ClCompile Include="watersimulation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -136,7 +136,7 @@
     <ClInclude Include="tessellation_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="flow.h">
+    <ClInclude Include="watersimulation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

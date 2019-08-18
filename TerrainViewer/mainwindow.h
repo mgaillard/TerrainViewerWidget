@@ -4,7 +4,7 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_mainwindow.h"
 #include "parameterdock.h"
-#include "openterraindialog.h"
+#include "watersimulation.h"
 
 class MainWindow : public QMainWindow
 {
@@ -24,6 +24,10 @@ private slots:
 
 	void resetViewerWidget();
 
+	void initWaterSimulation();
+	
+	void updateWaterSimulation();
+
 private:
 	void setupUi();
 	void createActions();
@@ -31,6 +35,8 @@ private:
 	Ui::MainWindowClass ui;
 
 	TerrainViewer::ParameterDock* m_parameterDock;
+
+	TerrainViewer::WaterSimulation m_waterSimulation;
 };
 
 #endif // MAINWINDOW_H

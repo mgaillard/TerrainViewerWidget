@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>600</width>
-     <height>26</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -48,8 +48,16 @@
     <addaction name="actionExport_light_map"/>
     <addaction name="actionExport_DEM_texture"/>
    </widget>
+   <widget class="QMenu" name="menuSimulation">
+    <property name="title">
+     <string>Simulation</string>
+    </property>
+    <addaction name="actionInitialize_water"/>
+    <addaction name="actionUpdate_water"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuExport"/>
+   <addaction name="menuSimulation"/>
    <addaction name="menuWindow"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
@@ -82,6 +90,19 @@
   <action name="actionExport_DEM_texture">
    <property name="text">
     <string>Export DEM texture</string>
+   </property>
+  </action>
+  <action name="actionInitialize_water">
+   <property name="text">
+    <string>Initialize water</string>
+   </property>
+  </action>
+  <action name="actionUpdate_water">
+   <property name="text">
+    <string>Update water</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
  </widget>
