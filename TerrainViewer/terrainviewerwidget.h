@@ -16,6 +16,7 @@
 #include "terrain.h"
 #include "terrainviewerparameters.h"
 #include "occlusion.h"
+#include "watersimulation.h"
 
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
@@ -59,8 +60,6 @@ public slots:
 	 */
 	void loadTerrain(const Terrain& terrain);
 
-	void setWaterLevel(const std::vector<float>& waterMap);
-
 	/**
 	 * \brief Set the camera
 	 * \param camera The new camera
@@ -72,6 +71,21 @@ public slots:
 	 * \param parameters The new parameters.
 	 */
 	void setParameters(const Parameters& parameters);
+
+	/**
+	 * \brief Initialize and start the water simulation
+	 */
+	void startWaterSimulation();
+	
+	/**
+	 * \brief Pause the water simulation
+	 */
+	void pauseWaterSimulation();
+	
+	/**
+	 * \brief Resume the water simulation (no initialization)
+	 */
+	void resumeWaterSimulation();
 
 protected:
 	void initializeGL() override;
@@ -107,9 +121,6 @@ private:
 	 */
 	void initLightMapTexture();
 
-	void initWaterMapTexture();
-	void initWaterMapTexture(const std::vector<float>& waterMap);
-
 	/**
 	 * \brief Update the uniform variables in the shader that are given as parameters.
 	 * The m_program must be bound when this function is called.
@@ -126,6 +137,8 @@ private:
 	std::unique_ptr<QOpenGLShaderProgram> m_program;
 	std::unique_ptr<QOpenGLShaderProgram> m_computeNormalsProgram;
 
+	WaterSimulation m_waterSimulation;
+
 	Terrain m_terrain;
 
 	std::vector<HorizonAngles> m_horizonAngles;
@@ -135,7 +148,6 @@ private:
 	QOpenGLTexture m_heightTexture;
 	QOpenGLTexture m_normalTexture;
 	QOpenGLTexture m_lightMapTexture;
-	QOpenGLTexture m_waterMapTexture;
 
 	OrbitCamera m_camera;
 };

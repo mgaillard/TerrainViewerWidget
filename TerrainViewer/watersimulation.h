@@ -1,7 +1,11 @@
-#ifndef FLOW_H
-#define FLOW_H
+#ifndef WATERSIMULATION_H
+#define WATERSIMULATION_H
 
 #include <vector>
+
+#include <QOpenGLContext>
+#include <QOpenGLTexture>
+#include <QOpenGLShaderProgram>
 
 #include "terrain.h"
 
@@ -13,32 +17,57 @@ class WaterSimulation
 public:
 	WaterSimulation();
 
-	/**
-	 * \brief Return the current water map
-	 * \return The current water map
-	 */
-	const std::vector<float>& waterMap() const;
+	void cleanup();
 
-	void initSimulation(const Terrain& terrain);
+	/**
+	 * \brief Return the current water map as a texture
+	 * \return The current water map as a texture
+	 */
+	QOpenGLTexture& waterMapTexture();
+
+	void initSimulation(QOpenGLContext* context, const Terrain& terrain);
 	
-	void computeIteration();
+	void computeIteration(QOpenGLContext* context);
+
+	void computeSingleIteration(QOpenGLContext* context);
+
+	/**
+	 * \brief Set the initial water level
+	 * \param initialWaterLevel The new value of the initial water level
+	 */
+	void setInitialWaterLevel(float initialWaterLevel);
+
+	/**
+	 * \brief Start the simulation by setting the number of passes per iteration to one
+	 */
+	void start();
+	
+	/**
+	 * \brief Stop the simulation by setting the number of passes per iterations to zero
+	 */
+	void stop();
 
 private:
+	void initComputeShader();
+	void initTextures();
+
+	int m_passesPerIterations;
 	float m_initialWaterLevel;
 	float m_rainRate;
 	float m_evaporationRate;
 	float m_timeStep;
+	bool m_bounceBoundaries;
 	
 	Terrain m_terrain;
 
-	// Height of water on each cell of the terrain
-	std::vector<float> m_waterMap;
-
-	// Flow in each direction on each cell
-	// In this order: left, right, top, bottom
-	std::array<std::vector<float>, 4> m_outFlow;
+	std::unique_ptr<QOpenGLShaderProgram> m_computeFlowProgram;
+	std::unique_ptr<QOpenGLShaderProgram> m_computeWaterMapProgram;
+	
+	QOpenGLTexture m_heightTexture;
+	QOpenGLTexture m_waterMapTexture;
+	QOpenGLTexture m_outFlowTexture;
 };
 
 }
 
-#endif // FLOW_H
+#endif // WATERSIMULATION_H

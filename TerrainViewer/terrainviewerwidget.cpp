@@ -17,8 +17,8 @@ using namespace TerrainViewer;
 const Parameters TerrainViewerWidget::default_parameters = {
 	Palette::demScreen,
 	Shading::uniformLight,
-	false,    // wireframe
-	1.f,      // pixelsPerTriangleEdge
+	false,         // wireframe
+	1.f, // pixelsPerTriangleEdge
 };
 
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
@@ -34,8 +34,7 @@ TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
 	m_heightTexture(QOpenGLTexture::Target2D),
 	m_normalTexture(QOpenGLTexture::Target2D),
 	m_lightMapTexture(QOpenGLTexture::Target2D),
-	m_waterMapTexture(QOpenGLTexture::Target2D),
-	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, -1.0 }, { 0.0, 1.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
+	m_camera({ 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 }, 45.0f, 1.0f, 0.01f, 100.0f)
 {
 	
 }
@@ -72,6 +71,7 @@ void TerrainViewerWidget::cleanup()
 		m_lightMapTexture.destroy();
 		m_program.reset(nullptr);
 		m_computeNormalsProgram.reset(nullptr);
+		m_waterSimulation.cleanup();
 		doneCurrent();
 	}
 }
@@ -163,20 +163,16 @@ void TerrainViewerWidget::loadTerrain(const Terrain& terrain)
 
 	// Precompute the horizon angles
 	m_horizonAngles = computeHorizonAngles(m_terrain);
+
+	// Init the water simulation for this terrain
+	m_waterSimulation.setInitialWaterLevel(0.0f);
+	m_waterSimulation.initSimulation(context(), terrain);
+	m_waterSimulation.stop();
 	
 	// Init the textures storing the information of the terrain
 	initTerrainTexture();
-	initWaterMapTexture();
 	initNormalTexture();
 	initLightMapTexture();
-
-	update();
-}
-
-void TerrainViewerWidget::setWaterLevel(const std::vector<float>& waterMap)
-{
-	initWaterMapTexture(waterMap);
-	initNormalTexture();
 
 	update();
 }
@@ -209,6 +205,27 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 	}
 }
 
+void TerrainViewerWidget::startWaterSimulation()
+{
+	makeCurrent();
+	m_waterSimulation.setInitialWaterLevel(0.1f);
+	m_waterSimulation.initSimulation(context(), m_terrain);
+	m_waterSimulation.start();
+	doneCurrent();
+
+	update();
+}
+
+void TerrainViewerWidget::pauseWaterSimulation()
+{
+	m_waterSimulation.stop();
+}
+
+void TerrainViewerWidget::resumeWaterSimulation()
+{
+	m_waterSimulation.start();
+}
+
 void TerrainViewerWidget::initializeGL()
 {
 	connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &TerrainViewerWidget::cleanup);
@@ -232,9 +249,7 @@ void TerrainViewerWidget::initializeGL()
 	m_vbo.bind();
 
 	const auto posLoc = 0;
-	// Enable attributes
 	m_program->enableAttributeArray(posLoc);
-	// Tell OpenGL how to get the attribute values out of the vbo (stride and offset).
 	m_program->setAttributeArray(posLoc, nullptr, 3, 0);
 
 	// Update the uniform variables in the shader that are given as parameters
@@ -250,7 +265,7 @@ void TerrainViewerWidget::initializeGL()
 	m_camera.setFovy(45.0f);
 	m_camera.setAspectRatio(float(width()) / height());
 	m_camera.setNearPlane(0.01f);
-	m_camera.setFarPlane(100.0f);
+	m_camera.setFarPlane(1000.0f);
 
 	// Print OpenGL info and Debug messages
 	printInfo();
@@ -268,6 +283,10 @@ void TerrainViewerWidget::paintGL()
 
 	if (m_program && m_numberPatches > 0)
 	{
+		// Update the water simulation and normals
+		m_waterSimulation.computeIteration(context());
+		computeNormalsOnShader();
+		
 		// Setup matrices
 		QMatrix4x4 worldMatrix;
 		worldMatrix.translate(-m_terrain.height() / 2, -m_terrain.width() / 2, 0.0);
@@ -316,7 +335,7 @@ void TerrainViewerWidget::paintGL()
 		// Bind the water-map texture
 		const auto waterMapTextureUnit = 3;
 		m_program->setUniformValue("terrain.waterMap_texture", waterMapTextureUnit);
-		m_waterMapTexture.bind(waterMapTextureUnit);
+		m_waterSimulation.waterMapTexture().bind(waterMapTextureUnit);
 
 		// Bind the VAO containing the patches
 		QOpenGLVertexArrayObject::Binder vaoBinder(&m_vao);
@@ -336,10 +355,13 @@ void TerrainViewerWidget::paintGL()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
+		m_waterSimulation.waterMapTexture().release();
 		m_lightMapTexture.release();
 		m_normalTexture.release();
 		m_heightTexture.release();
 		m_program->release();
+
+		update();
 	}
 }
 
@@ -419,7 +441,7 @@ void TerrainViewerWidget::computeNormalsOnShader()
 		glBindImageTexture(heightImageUnit, m_heightTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
 		const auto waterImageUnit = 1;
-		glBindImageTexture(waterImageUnit, m_waterMapTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+		glBindImageTexture(waterImageUnit, m_waterSimulation.waterMapTexture().textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 		
 		// Bind the normal texture as an image
 		const auto normalImageUnit = 2;
@@ -434,6 +456,7 @@ void TerrainViewerWidget::computeNormalsOnShader()
 
 		// Unbind the images
 		glBindImageTexture(normalImageUnit, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+		glBindImageTexture(waterImageUnit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 		glBindImageTexture(heightImageUnit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
 		m_computeNormalsProgram->release();
@@ -456,7 +479,6 @@ void TerrainViewerWidget::initTerrainTexture()
 void TerrainViewerWidget::initNormalTexture()
 {
 	m_normalTexture.destroy();
-	m_normalTexture.destroy();
 	m_normalTexture.create();
 	m_normalTexture.setFormat(QOpenGLTexture::RGBA32F);
 	m_normalTexture.setMinificationFilter(QOpenGLTexture::Linear);
@@ -474,7 +496,6 @@ void TerrainViewerWidget::initLightMapTexture()
 	const std::vector<float> lightMap = computeLightMap(m_terrain, m_horizonAngles, m_parameters);
 
 	m_lightMapTexture.destroy();
-	m_lightMapTexture.destroy();
 	m_lightMapTexture.create();
 	m_lightMapTexture.setFormat(QOpenGLTexture::R32F);
 	m_lightMapTexture.setMinificationFilter(QOpenGLTexture::Linear);
@@ -483,26 +504,6 @@ void TerrainViewerWidget::initLightMapTexture()
 	m_lightMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_lightMapTexture.allocateStorage();
 	m_lightMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, lightMap.data());
-}
-
-void TerrainViewerWidget::initWaterMapTexture()
-{
-	const std::vector<float> emptyWaterMap(m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), 0.0);
-	initWaterMapTexture(emptyWaterMap);
-}
-
-void TerrainViewerWidget::initWaterMapTexture(const std::vector<float>& waterMap)
-{
-	m_waterMapTexture.destroy();
-	m_waterMapTexture.destroy();
-	m_waterMapTexture.create();
-	m_waterMapTexture.setFormat(QOpenGLTexture::R32F);
-	m_waterMapTexture.setMinificationFilter(QOpenGLTexture::Linear);
-	m_waterMapTexture.setMagnificationFilter(QOpenGLTexture::Linear);
-	m_waterMapTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
-	m_waterMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
-	m_waterMapTexture.allocateStorage();
-	m_waterMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, waterMap.data());
 }
 
 void TerrainViewerWidget::updateParameters()

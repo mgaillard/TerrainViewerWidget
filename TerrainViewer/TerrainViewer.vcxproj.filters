@@ -113,6 +113,12 @@
     <None Include="Shaders\compute_normals.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="Shaders\compute_water_flow.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\compute_water_height.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">

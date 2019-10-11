@@ -121,14 +121,17 @@ void MainWindow::resetViewerWidget()
 
 void MainWindow::initWaterSimulation()
 {
-	m_waterSimulation.initSimulation(ui.terrainViewerWidget->terrain());
-	ui.terrainViewerWidget->setWaterLevel(m_waterSimulation.waterMap());
+	ui.terrainViewerWidget->startWaterSimulation();
 }
 
-void MainWindow::updateWaterSimulation()
+void MainWindow::pauseWaterSimulation()
 {
-	m_waterSimulation.computeIteration();
-	ui.terrainViewerWidget->setWaterLevel(m_waterSimulation.waterMap());
+	ui.terrainViewerWidget->pauseWaterSimulation();
+}
+
+void MainWindow::resumeWaterSimulation()
+{
+	ui.terrainViewerWidget->resumeWaterSimulation();
 }
 
 void MainWindow::setupUi()
@@ -148,7 +151,8 @@ void MainWindow::createActions()
 	connect(ui.actionExport_light_map, &QAction::triggered, this, &MainWindow::exportLightMap);
 	connect(ui.actionExport_DEM_texture, &QAction::triggered, this, &MainWindow::exportDemTexture);
 	connect(ui.actionInitialize_water, &QAction::triggered, this, &MainWindow::initWaterSimulation);
-	connect(ui.actionUpdate_water, &QAction::triggered, this, &MainWindow::updateWaterSimulation);
+	connect(ui.actionPauseSimulation, &QAction::triggered, this, &MainWindow::pauseWaterSimulation);
+	connect(ui.actionResumeSimulation, &QAction::triggered, this, &MainWindow::resumeWaterSimulation);
 	connect(m_parameterDock, &TerrainViewer::ParameterDock::parameterChanged, [=]() {
 		ui.terrainViewerWidget->setParameters(m_parameterDock->parameters());
 	});

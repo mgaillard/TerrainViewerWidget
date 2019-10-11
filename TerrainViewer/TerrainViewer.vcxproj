@@ -147,6 +147,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\compute_normals.glsl" />
+    <None Include="Shaders\compute_water_flow.glsl" />
+    <None Include="Shaders\compute_water_height.glsl" />
     <None Include="Shaders\fragment_shader.glsl" />
     <None Include="Shaders\tessellation_control.glsl" />
     <None Include="Shaders\tessellation_evaluation.glsl" />
@@ -178,7 +180,7 @@
   </ImportGroup>
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_x64="Qt 5.9.7" MocOptions="" />
+      <UserProperties MocDir=".\GeneratedFiles\$(ConfigurationName)" UicDir=".\GeneratedFiles" RccDir=".\GeneratedFiles" lupdateOptions="" lupdateOnBuild="0" lreleaseOptions="" Qt5Version_x0020_x64="Qt 5.12.4" MocOptions="" />
     </VisualStudio>
   </ProjectExtensions>
 </Project>

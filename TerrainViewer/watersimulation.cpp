@@ -1,229 +1,205 @@
 #include "watersimulation.h"
 
-#include "utils.h"
+#include <QOpenGLFunctions_4_3_Core>
 
 using namespace TerrainViewer;
 
-void incrementWater(float waterIncrement, float timeStep, std::vector<float>& waterMap)
-{
-	// Simulate rain, increment water level in each cell
-	// TODO: use SIMD
-#pragma omp parallel for
-	for (int i = 0; i < waterMap.size(); i++)
-	{
-		waterMap[i] += waterIncrement * timeStep;
-	}
-}
-
-void evaporateWater(float evaporationRate, float timeStep, std::vector<float>& waterMap)
-{
-	// Simulate evaporation, increment water level in each cell
-	// TODO: use SIMD
-#pragma omp parallel for
-	for (int i = 0; i < waterMap.size(); i++)
-	{
-		waterMap[i] = std::max(0.0f, waterMap[i] - evaporationRate * timeStep);
-	}
-}
-
-void computeOutputFlow(const Terrain& terrain,
-	                   float timeStep,
-	                   std::vector<float>& waterMap,
-	                   std::array<std::vector<float>, 4>& outFlow)
-{
-	const int width = terrain.resolutionWidth();
-	const int height = terrain.resolutionHeight();
-	const float cellWidth = terrain.cellWidth();
-	const float cellHeight = terrain.cellHeight();
-
-#pragma omp parallel for
-	for (int j = 0; j < width; j++)
-	{
-		for (int i = 0; i < height; i++)
-		{
-			const int left = clamp(j - 1, 0, width - 1);
-			const int right = clamp(j + 1, 0, width - 1);
-			const int top = clamp(i - 1, 0, height - 1);
-			const int bottom = clamp(i + 1, 0, height - 1);
-
-			const int currentCell = terrain.cellIndex(i, j);
-			const int leftCell = terrain.cellIndex(i, left);
-			const int rightCell = terrain.cellIndex(i, right);
-			const int topCell = terrain.cellIndex(top, j);
-			const int bottomCell = terrain.cellIndex(bottom, j);
-
-			// Water height in the 4 neighbors
-			const auto waterHeight = waterMap[currentCell];
-			const auto waterHeightLeft = waterMap[leftCell];
-			const auto waterHeightRight = waterMap[rightCell];
-			const auto waterHeightTop = waterMap[topCell];
-			const auto waterHeightBottom = waterMap[bottomCell];
-
-			// Altitude of the 4 neighbors
-			const auto altitude = terrain(i, j);
-			const auto altitudeLeft = terrain(i, left);
-			const auto altitudeRight = terrain(i, right);
-			const auto altitudeTop = terrain(top, j);
-			const auto altitudeBottom = terrain(bottom, j);
-
-			// Difference in height
-			const auto diffLeft = (altitude + waterHeight) - (altitudeLeft + waterHeightLeft);
-			const auto diffRight = (altitude + waterHeight) - (altitudeRight + waterHeightRight);
-			const auto diffTop = (altitude + waterHeight) - (altitudeTop + waterHeightTop);
-			const auto diffBottom = (altitude + waterHeight) - (altitudeBottom + waterHeightBottom);
-
-			// Compute the change in flow
-			const auto flowLeft = std::max(0.0f, outFlow[0][currentCell] + timeStep * diffLeft / cellWidth);
-			const auto flowRight = std::max(0.0f, outFlow[1][currentCell] + timeStep * diffRight / cellWidth);
-			const auto flowTop = std::max(0.0f, outFlow[2][currentCell] + timeStep * diffTop / cellHeight);
-			const auto flowBottom = std::max(0.0f, outFlow[3][currentCell] + timeStep * diffBottom / cellHeight);
-
-			const auto flowSum = flowLeft + flowRight + flowTop + flowBottom;
-
-			if (flowSum > 0.0f)
-			{
-				// If the sum of the flow is greater than the quantity of water in the cell, flow is scaled down
-				const auto K = clamp((waterHeight * cellWidth * cellHeight) / (flowSum * timeStep), 0.0f, 1.0f);
-
-				// Update the flow
-				outFlow[0][currentCell] = flowLeft * K;
-				outFlow[1][currentCell] = flowRight * K;
-				outFlow[2][currentCell] = flowTop * K;
-				outFlow[3][currentCell] = flowBottom * K;
-			}
-			else
-			{
-				// Update the flow
-				outFlow[0][currentCell] = 0.0f;
-				outFlow[1][currentCell] = 0.0f;
-				outFlow[2][currentCell] = 0.0f;
-				outFlow[3][currentCell] = 0.0f;
-			}
-		}
-	}
-}
-
-void updateWaterMap(const Terrain& terrain,
-					float timeStep,
-					std::vector<float>& waterMap,
-					std::array<std::vector<float>, 4>& outFlow)
-{
-	const int width = terrain.resolutionWidth();
-	const int height = terrain.resolutionHeight();
-	const float cellArea = terrain.cellWidth() * terrain.cellHeight();
-
-#pragma omp parallel for
-	for (int j = 0; j < width; j++)
-	{
-		for (int i = 0; i < height; i++)
-		{
-			const int left = clamp(j - 1, 0, width - 1);
-			const int right = clamp(j + 1, 0, width - 1);
-			const int top = clamp(i - 1, 0, height - 1);
-			const int bottom = clamp(i + 1, 0, height - 1);
-
-			const int currentCell = terrain.cellIndex(i, j);
-			const int leftCell = terrain.cellIndex(i, left);
-			const int rightCell = terrain.cellIndex(i, right);
-			const int topCell = terrain.cellIndex(top, j);
-			const int bottomCell = terrain.cellIndex(bottom, j);
-
-			const auto outFlowTotal = outFlow[0][currentCell]
-				                    + outFlow[1][currentCell]
-				                    + outFlow[2][currentCell]
-				                    + outFlow[3][currentCell];
-
-			const auto inFlowTotal = outFlow[0][rightCell]  // Flow on the left from the right cell
-				                   + outFlow[1][leftCell]   // Flow on the right from the left cell
-				                   + outFlow[2][bottomCell] // Flow on the top from the bottom cell
-				                   + outFlow[3][topCell];   // Flow on the bottom from the top cell
-
-			const auto newHeight = waterMap[currentCell] + ((inFlowTotal - outFlowTotal) * timeStep) / cellArea;
-
-			waterMap[currentCell] = std::max(0.0f, newHeight);
-		}
-	}
-}
-
-void removeWaterOnBorders(const Terrain& terrain, std::vector<float>& waterMap, std::array<std::vector<float>, 4>& outFlow)
-{
-	const int width = terrain.resolutionWidth();
-	const int height = terrain.resolutionHeight();
-	
-	// Remove water and flow on the borders of the terrain
-	for (int i = 0; i < height; i++)
-	{
-		waterMap[terrain.cellIndex(i, 0)] = 0.0f;
-		waterMap[terrain.cellIndex(i, width - 1)] = 0.0f;
-
-		for (auto& outFlowDirection : outFlow)
-		{
-			outFlowDirection[terrain.cellIndex(i, 0)] = 0.0f;
-			outFlowDirection[terrain.cellIndex(i, width - 1)] = 0.0f;
-		}
-	}
-	for (int j = 0; j < width; j++)
-	{
-		waterMap[terrain.cellIndex(0, j)] = 0.0f;
-		waterMap[terrain.cellIndex(height - 1, j)] = 0.0f;
-
-		for (auto& outFlowDirection : outFlow)
-		{
-			outFlowDirection[terrain.cellIndex(0, j)] = 0.0f;
-			outFlowDirection[terrain.cellIndex(height - 1, j)] = 0.0f;
-		}
-	}
-}
-
 WaterSimulation::WaterSimulation() :
-	m_initialWaterLevel(0.1f),
+	m_passesPerIterations(1),
+	m_initialWaterLevel(0.0f),
 	m_rainRate(0.0f),
 	m_evaporationRate(1e-4),
 	m_timeStep(0.001f),
-	m_terrain(0.0, 0.0, 0.0)
+	m_bounceBoundaries(false),
+	m_terrain(0.0, 0.0, 0.0),
+	m_computeFlowProgram(nullptr),
+	m_computeWaterMapProgram(nullptr),
+	m_heightTexture(QOpenGLTexture::Target2D),
+	m_waterMapTexture(QOpenGLTexture::Target2D),
+	m_outFlowTexture(QOpenGLTexture::Target2D)
 {
 	
 }
 
-const std::vector<float>& WaterSimulation::waterMap() const
+void WaterSimulation::cleanup()
 {
-	return m_waterMap;
+	if (m_computeFlowProgram && m_computeWaterMapProgram)
+	{
+		m_heightTexture.destroy();
+		m_waterMapTexture.destroy();
+		m_outFlowTexture.destroy();
+		m_computeFlowProgram.reset(nullptr);
+		m_computeWaterMapProgram.reset(nullptr);
+	}
 }
 
-void WaterSimulation::initSimulation(const Terrain& terrain)
+QOpenGLTexture& WaterSimulation::waterMapTexture()
+{
+	return m_waterMapTexture;
+}
+
+void WaterSimulation::initSimulation(QOpenGLContext* context, const Terrain& terrain)
 {
 	m_terrain = terrain;
-	
-	const int width = m_terrain.resolutionWidth();
-	const int height = m_terrain.resolutionHeight();
-	const int totalResolution = width * height;
 
-	m_waterMap.clear();
-	m_waterMap.resize(totalResolution, m_initialWaterLevel);
+	initComputeShader();
+	initTextures();
+}
 
-	// Initialize out flow
-	for (unsigned int i = 0; i < m_outFlow.size(); i++)
+void WaterSimulation::computeIteration(QOpenGLContext* context)
+{
+	for (int i = 0; i < m_passesPerIterations; i++)
 	{
-		m_outFlow[i].clear();
-		m_outFlow[i].resize(totalResolution, 0.0);
+		computeSingleIteration(context);
 	}
 }
 
-void WaterSimulation::computeIteration()
+void WaterSimulation::computeSingleIteration(QOpenGLContext* context)
 {
-	if (!m_waterMap.empty())
+	auto f = context->versionFunctions<QOpenGLFunctions_4_3_Core>();
+
+	// Local size in the compute shader
+	const int localSizeX = 4;
+	const int localSizeY = 4;
+
+	if (m_computeFlowProgram)
 	{
-		// Increment and evaporate water in each cell
-		incrementWater(m_rainRate, m_timeStep, m_waterMap);
-		evaporateWater(m_evaporationRate, m_timeStep, m_waterMap);
+		m_computeFlowProgram->bind();
 
-		// Compute output flow in each cell
-		computeOutputFlow(m_terrain, m_timeStep, m_waterMap, m_outFlow);
+		// Update uniform values
+		m_computeFlowProgram->setUniformValue("terrain_height", m_terrain.height());
+		m_computeFlowProgram->setUniformValue("terrain_width", m_terrain.width());
+		m_computeFlowProgram->setUniformValue("time_step", m_timeStep);
+		m_computeFlowProgram->setUniformValue("water_increment", m_rainRate);
+		m_computeFlowProgram->setUniformValue("evaporation_rate", m_evaporationRate);
+		m_computeFlowProgram->setUniformValue("bounce_boundaries", m_bounceBoundaries);
 
-		// Update water map
-		updateWaterMap(m_terrain, m_timeStep, m_waterMap, m_outFlow);
+		// Bind the height texture as an image
+		const auto heightImageUnit = 0;
+		f->glBindImageTexture(heightImageUnit, m_heightTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 
-		// Remove water on borders
-		removeWaterOnBorders(m_terrain, m_waterMap, m_outFlow);
+		const auto waterImageUnit = 1;
+		f->glBindImageTexture(waterImageUnit, m_waterMapTexture.textureId(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+		// Bind the normal texture as an image
+		const auto outFlowImageUnit = 2;
+		f->glBindImageTexture(outFlowImageUnit, m_outFlowTexture.textureId(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+		// Compute the number of blocks in each dimensions
+		const int blocksX = std::max(1, 1 + ((m_terrain.resolutionWidth() - 1) / localSizeX));
+		const int blocksY = std::max(1, 1 + ((m_terrain.resolutionHeight() - 1) / localSizeY));
+		// Launch the compute shader and wait for it to finish
+		f->glDispatchCompute(blocksX, blocksY, 1);
+		f->glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// Unbind the images
+		f->glBindImageTexture(outFlowImageUnit, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+		f->glBindImageTexture(waterImageUnit, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+		f->glBindImageTexture(heightImageUnit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+
+		m_computeFlowProgram->release();
 	}
+
+	if (m_computeWaterMapProgram)
+	{
+		m_computeWaterMapProgram->bind();
+
+		// Update uniform values
+		m_computeWaterMapProgram->setUniformValue("terrain_height", m_terrain.height());
+		m_computeWaterMapProgram->setUniformValue("terrain_width", m_terrain.width());
+		m_computeWaterMapProgram->setUniformValue("time_step", m_timeStep);
+		m_computeWaterMapProgram->setUniformValue("water_increment", m_rainRate);
+		m_computeWaterMapProgram->setUniformValue("evaporation_rate", m_evaporationRate);
+		m_computeWaterMapProgram->setUniformValue("bounce_boundaries", m_bounceBoundaries);
+
+		// Bind the height texture as an image
+		const auto heightImageUnit = 0;
+		f->glBindImageTexture(heightImageUnit, m_heightTexture.textureId(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+
+		const auto waterImageUnit = 1;
+		f->glBindImageTexture(waterImageUnit, m_waterMapTexture.textureId(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+
+		// Bind the normal texture as an image
+		const auto outFlowImageUnit = 2;
+		f->glBindImageTexture(outFlowImageUnit, m_outFlowTexture.textureId(), 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+		// Compute the number of blocks in each dimensions
+		const int blocksX = std::max(1, 1 + ((m_terrain.resolutionWidth() - 1) / localSizeX));
+		const int blocksY = std::max(1, 1 + ((m_terrain.resolutionHeight() - 1) / localSizeY));
+		// Launch the compute shader and wait for it to finish
+		f->glDispatchCompute(blocksX, blocksY, 1);
+		f->glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		// Unbind the images
+		f->glBindImageTexture(outFlowImageUnit, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+		f->glBindImageTexture(waterImageUnit, 0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+		f->glBindImageTexture(heightImageUnit, 0, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+
+		m_computeWaterMapProgram->release();
+	}
+}
+
+void WaterSimulation::setInitialWaterLevel(float initialWaterLevel)
+{
+	m_initialWaterLevel = initialWaterLevel;
+}
+
+void WaterSimulation::start()
+{
+	m_passesPerIterations = 1;
+}
+
+void WaterSimulation::stop()
+{
+	// Zero pass per iteration means that we are not computing anything
+	m_passesPerIterations = 0;
+}
+
+void WaterSimulation::initComputeShader()
+{
+	const QString shader_dir = ":/MainWindow/Shaders/";
+
+	m_computeFlowProgram = std::make_unique<QOpenGLShaderProgram>();
+	m_computeFlowProgram->addShaderFromSourceFile(QOpenGLShader::Compute, shader_dir + "compute_water_flow.glsl");
+	m_computeFlowProgram->link();
+
+	m_computeWaterMapProgram = std::make_unique<QOpenGLShaderProgram>();
+	m_computeWaterMapProgram->addShaderFromSourceFile(QOpenGLShader::Compute, shader_dir + "compute_water_height.glsl");
+	m_computeWaterMapProgram->link();
+}
+
+void WaterSimulation::initTextures()
+{
+	// TODO: reuse the texture from the terrain widget
+	m_heightTexture.destroy();
+	m_heightTexture.create();
+	m_heightTexture.setFormat(QOpenGLTexture::R32F);
+	m_heightTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_heightTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_heightTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_heightTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_heightTexture.allocateStorage();
+	m_heightTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, m_terrain.data());
+
+	const std::vector<float> initialWaterMap(m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), m_initialWaterLevel);
+	m_waterMapTexture.destroy();
+	m_waterMapTexture.create();
+	m_waterMapTexture.setFormat(QOpenGLTexture::R32F);
+	m_waterMapTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_waterMapTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_waterMapTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_waterMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_waterMapTexture.allocateStorage();
+	m_waterMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, initialWaterMap.data());
+
+	const std::vector<float> outFlowMap(4 * m_terrain.resolutionWidth() * m_terrain.resolutionHeight(), 0.0);
+	m_outFlowTexture.destroy();
+	m_outFlowTexture.create();
+	m_outFlowTexture.setFormat(QOpenGLTexture::RGBA32F);
+	m_outFlowTexture.setMinificationFilter(QOpenGLTexture::Linear);
+	m_outFlowTexture.setMagnificationFilter(QOpenGLTexture::Linear);
+	m_outFlowTexture.setWrapMode(QOpenGLTexture::ClampToEdge);
+	m_outFlowTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
+	m_outFlowTexture.allocateStorage();
+	m_outFlowTexture.setData(QOpenGLTexture::RGBA, QOpenGLTexture::Float32, outFlowMap.data());
 }

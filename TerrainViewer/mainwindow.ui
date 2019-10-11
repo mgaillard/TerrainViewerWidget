@@ -53,7 +53,8 @@
      <string>Simulation</string>
     </property>
     <addaction name="actionInitialize_water"/>
-    <addaction name="actionUpdate_water"/>
+    <addaction name="actionPauseSimulation"/>
+    <addaction name="actionResumeSimulation"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuExport"/>
@@ -97,12 +98,14 @@
     <string>Initialize water</string>
    </property>
   </action>
-  <action name="actionUpdate_water">
+  <action name="actionPauseSimulation">
    <property name="text">
-    <string>Update water</string>
+    <string>Pause</string>
    </property>
-   <property name="shortcut">
-    <string>F5</string>
+  </action>
+  <action name="actionResumeSimulation">
+   <property name="text">
+    <string>Resume</string>
    </property>
   </action>
  </widget>

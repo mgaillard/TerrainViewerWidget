@@ -4,7 +4,6 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_mainwindow.h"
 #include "parameterdock.h"
-#include "watersimulation.h"
 
 class MainWindow : public QMainWindow
 {
@@ -26,7 +25,9 @@ private slots:
 
 	void initWaterSimulation();
 	
-	void updateWaterSimulation();
+	void pauseWaterSimulation();
+
+	void resumeWaterSimulation();
 
 private:
 	void setupUi();
@@ -35,8 +36,6 @@ private:
 	Ui::MainWindowClass ui;
 
 	TerrainViewer::ParameterDock* m_parameterDock;
-
-	TerrainViewer::WaterSimulation m_waterSimulation;
 };
 
 #endif // MAINWINDOW_H
