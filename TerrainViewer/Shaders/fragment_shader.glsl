@@ -223,9 +223,16 @@ float compute_water()
 // the right color palette
 vec3 compute_color(const float altitude, const float slope, const float light, const float water)
 {
-	if (water > 1e-2)
+	// Color of water
+	if (water > 1e-2 && water <= 0.2)
 	{
-		return vec3(0.0, 0.0, 1.0);
+		// Shallow water is light blue
+		return mix(vec3(0.0, 0.5, 1.0), vec3(0.0, 0.0, 1.0), water / 0.2);
+	}
+	else if (water > 0.2)
+	{
+		// Deep water is dark blue
+		return mix(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.5), water - 0.2);
 	}
 
 	switch(palette)
