@@ -32,18 +32,48 @@ public:
 	void computeSingleIteration(QOpenGLContext* context);
 
 	/**
+	 * \brief Set the number of water simulation passes per call to computeIteration()
+	 * \param passesPerIterations The number of passes per iteration
+	 */
+	void setPassesPerIterations(int passesPerIterations);
+	
+	/**
 	 * \brief Set the initial water level
 	 * \param initialWaterLevel The new value of the initial water level
 	 */
 	void setInitialWaterLevel(float initialWaterLevel);
 
 	/**
-	 * \brief Start the simulation by setting the number of passes per iteration to one
+	 * \brief Set the rain rate
+	 * \param rainRate The value of the rain rate
+	 */
+	void setRainRate(float rainRate);
+
+	/**
+	 * \brief Set the evaporation rate
+	 * \param evaporationRate The new value of the evaporation rate
+	 */
+	void setEvaporationRate(float evaporationRate);
+
+	/**
+	 * \brief Set the time step
+	 * \param timeStep The new value of the time step
+	 */
+	void setTimeStep(float timeStep);
+
+	/**
+	 * \brief Set whether the water bounces on boundaries or not
+	 * \param bounceOnBoundaries True if water bounces on boundaries, false if water flows through boundaries
+	 */
+	void setBounceOnBoundaries(bool bounceOnBoundaries);
+
+	/**
+	 * \brief Start the simulation
 	 */
 	void start();
 	
 	/**
-	 * \brief Stop the simulation by setting the number of passes per iterations to zero
+	 * \brief Stop the simulation
 	 */
 	void stop();
 
@@ -51,6 +81,7 @@ private:
 	void initComputeShader();
 	void initTextures();
 
+	bool m_running;
 	int m_passesPerIterations;
 	float m_initialWaterLevel;
 	float m_rainRate;

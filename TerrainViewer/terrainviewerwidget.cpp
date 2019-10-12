@@ -17,8 +17,14 @@ using namespace TerrainViewer;
 const Parameters TerrainViewerWidget::default_parameters = {
 	Palette::demScreen,
 	Shading::uniformLight,
-	false,         // wireframe
-	1.f, // pixelsPerTriangleEdge
+	false,
+	1.f,
+	0.001f,
+	1,
+	false,
+	0.1f,
+	0.0f,
+	1e-4
 };
 
 TerrainViewerWidget::TerrainViewerWidget(QWidget *parent) :
@@ -190,15 +196,19 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 
 	if (m_program)
 	{
-		m_program->bind();
-		updateParameters();
-		m_program->release();
-
 		// Update the light map if the lighting model changed
 		if (shadingChanged)
 		{
 			initLightMapTexture();
 		}
+
+		// Pass parameters to the water simulation
+		m_waterSimulation.setTimeStep(m_parameters.timeStep);
+		m_waterSimulation.setPassesPerIterations(m_parameters.iterationsPerFrame);
+		m_waterSimulation.setBounceOnBoundaries(m_parameters.bounceOnBorders);
+		m_waterSimulation.setInitialWaterLevel(m_parameters.initialWaterLevel);
+		m_waterSimulation.setRainRate(m_parameters.rainRate);
+		m_waterSimulation.setEvaporationRate(m_parameters.evaporationRate);
 
 		// Parameters changed, we update the view
 		update();
@@ -208,7 +218,6 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 void TerrainViewerWidget::startWaterSimulation()
 {
 	makeCurrent();
-	m_waterSimulation.setInitialWaterLevel(0.1f);
 	m_waterSimulation.initSimulation(context(), m_terrain);
 	m_waterSimulation.start();
 	doneCurrent();
@@ -251,9 +260,6 @@ void TerrainViewerWidget::initializeGL()
 	const auto posLoc = 0;
 	m_program->enableAttributeArray(posLoc);
 	m_program->setAttributeArray(posLoc, nullptr, 3, 0);
-
-	// Update the uniform variables in the shader that are given as parameters
-	updateParameters();
 
 	m_vbo.release();
 	m_program->release();
@@ -316,6 +322,11 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("terrain.resolution_height", m_terrain.resolutionHeight());
 		m_program->setUniformValue("terrain.resolution_width", m_terrain.resolutionWidth());
 		m_program->setUniformValue("terrain.max_altitude", m_terrain.maxAltitude());
+
+		// Update parameters
+		m_program->setUniformValue("palette", static_cast<int>(m_parameters.palette));
+		m_program->setUniformValue("shading", static_cast<int>(m_parameters.shading));
+		m_program->setUniformValue("pixelsPerTriangleEdge", m_parameters.pixelsPerTriangleEdge);
 
 		// Bind the height texture
 		const auto heightTextureUnit = 0;
@@ -504,19 +515,4 @@ void TerrainViewerWidget::initLightMapTexture()
 	m_lightMapTexture.setSize(m_terrain.resolutionWidth(), m_terrain.resolutionHeight());
 	m_lightMapTexture.allocateStorage();
 	m_lightMapTexture.setData(QOpenGLTexture::Red, QOpenGLTexture::Float32, lightMap.data());
-}
-
-void TerrainViewerWidget::updateParameters()
-{
-	if (m_program)
-	{
-		// Update palette
-		m_program->setUniformValue("palette", static_cast<int>(m_parameters.palette));
-
-		// Update shading
-		m_program->setUniformValue("shading", static_cast<int>(m_parameters.shading));
-
-		// Update pixelsPerTriangleEdge
-		m_program->setUniformValue("pixelsPerTriangleEdge", m_parameters.pixelsPerTriangleEdge);
-	}
 }

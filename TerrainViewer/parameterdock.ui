@@ -7,122 +7,266 @@
     <x>0</x>
     <y>0</y>
     <width>254</width>
-    <height>260</height>
+    <height>352</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Parameters</string>
   </property>
   <widget class="QWidget" name="widget">
-   <layout class="QFormLayout" name="formLayout_2">
-    <item row="0" column="0">
-     <widget class="QLabel" name="paletteLabel">
-      <property name="text">
-       <string>Palette</string>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QGroupBox" name="visuGroupBox">
+      <property name="title">
+       <string>Visualization</string>
       </property>
+      <layout class="QFormLayout" name="formLayout">
+       <item row="1" column="0">
+        <widget class="QLabel" name="paletteLabel">
+         <property name="text">
+          <string>Palette</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="paletteComboBox">
+         <item>
+          <property name="text">
+           <string>Texture</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>White</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>DEM Screen</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Environment</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="shadingLabel">
+         <property name="text">
+          <string>Shading</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="shadingComboBox">
+         <item>
+          <property name="text">
+           <string>Normal</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Uniform Light Basic</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Uniform Light</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Directional Light</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Slope</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="wireframeLabel">
+         <property name="text">
+          <string>Wireframe</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="wireframeCheckBox">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="lodLabel">
+         <property name="text">
+          <string>Level of Details</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="lodDoubleSpinBox">
+         <property name="minimum">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>128.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>1.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
-    <item row="0" column="1">
-     <widget class="QComboBox" name="paletteComboBox">
-      <item>
-       <property name="text">
-        <string>Texture</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>White</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>DEM Screen</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Environment</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="shadingLabel">
-      <property name="text">
-       <string>Shading</string>
+    <item>
+     <widget class="QGroupBox" name="waterGroupBox">
+      <property name="title">
+       <string>Water simulation</string>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QComboBox" name="shadingComboBox">
-      <item>
-       <property name="text">
-        <string>Normal</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Uniform Light Basic</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Uniform Light</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Directional Light</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Slope</string>
-       </property>
-      </item>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="wireframeLabel">
-      <property name="text">
-       <string>Wireframe</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1">
-     <widget class="QCheckBox" name="wireframeCheckBox">
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="lodLabel">
-      <property name="text">
-       <string>Level of Details</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1">
-     <widget class="QDoubleSpinBox" name="lodDoubleSpinBox">
-      <property name="minimum">
-       <double>1.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>128.000000000000000</double>
-      </property>
-      <property name="value">
-       <double>8.000000000000000</double>
-      </property>
+      <layout class="QFormLayout" name="formLayout_2">
+       <item row="2" column="0">
+        <widget class="QLabel" name="bounceBordersLabel">
+         <property name="text">
+          <string>Bounce on borders</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="bounceBordersCheckBox">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="timeStepLabel">
+         <property name="text">
+          <string>Time step</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QDoubleSpinBox" name="timeStepDoubleSpinBox">
+         <property name="suffix">
+          <string> sec</string>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.000100000000000</double>
+         </property>
+         <property name="value">
+          <double>0.001000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="iterationsPerFrameLabel">
+         <property name="text">
+          <string>Iterations per frame</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QSpinBox" name="iterationsPerFrameSpinBox">
+         <property name="maximum">
+          <number>20</number>
+         </property>
+         <property name="value">
+          <number>1</number>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="initialWaterLabel">
+         <property name="text">
+          <string>Initial water</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QDoubleSpinBox" name="initialWaterDoubleSpin">
+         <property name="suffix">
+          <string> m</string>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.010000000000000</double>
+         </property>
+         <property name="value">
+          <double>0.010000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="rainRateLabel">
+         <property name="text">
+          <string>Rain rate</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QDoubleSpinBox" name="rainRateDoubleSpinBox">
+         <property name="suffix">
+          <string> m/s</string>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.000100000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="evaporationRateLabel">
+         <property name="text">
+          <string>Evaporation rate</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1">
+        <widget class="QDoubleSpinBox" name="evaporationRateDoubleSpinBox">
+         <property name="suffix">
+          <string> m/s</string>
+         </property>
+         <property name="decimals">
+          <number>4</number>
+         </property>
+         <property name="maximum">
+          <double>10.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>0.000100000000000</double>
+         </property>
+         <property name="value">
+          <double>0.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <tabstops>
-  <tabstop>paletteComboBox</tabstop>
- </tabstops>
  <resources/>
  <connections/>
 </ui>

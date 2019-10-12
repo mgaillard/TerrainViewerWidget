@@ -48,9 +48,12 @@ void WaterSimulation::initSimulation(QOpenGLContext* context, const Terrain& ter
 
 void WaterSimulation::computeIteration(QOpenGLContext* context)
 {
-	for (int i = 0; i < m_passesPerIterations; i++)
+	if (m_running)
 	{
-		computeSingleIteration(context);
+		for (int i = 0; i < m_passesPerIterations; i++)
+		{
+			computeSingleIteration(context);
+		}
 	}
 }
 
@@ -139,20 +142,44 @@ void WaterSimulation::computeSingleIteration(QOpenGLContext* context)
 	}
 }
 
+void WaterSimulation::setPassesPerIterations(int passesPerIterations)
+{
+	m_passesPerIterations = passesPerIterations;
+}
+
 void WaterSimulation::setInitialWaterLevel(float initialWaterLevel)
 {
 	m_initialWaterLevel = initialWaterLevel;
 }
 
+void WaterSimulation::setRainRate(float rainRate)
+{
+	m_rainRate = rainRate;
+}
+
+void WaterSimulation::setEvaporationRate(float evaporationRate)
+{
+	m_evaporationRate = evaporationRate;
+}
+
+void WaterSimulation::setTimeStep(float timeStep)
+{
+	m_timeStep = timeStep;
+}
+
+void WaterSimulation::setBounceOnBoundaries(bool bounceOnBoundaries)
+{
+	m_bounceBoundaries = bounceOnBoundaries;
+}
+
 void WaterSimulation::start()
 {
-	m_passesPerIterations = 1;
+	m_running = true;
 }
 
 void WaterSimulation::stop()
 {
-	// Zero pass per iteration means that we are not computing anything
-	m_passesPerIterations = 0;
+	m_running = false;
 }
 
 void WaterSimulation::initComputeShader()

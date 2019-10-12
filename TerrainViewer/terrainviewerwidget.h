@@ -121,12 +121,6 @@ private:
 	 */
 	void initLightMapTexture();
 
-	/**
-	 * \brief Update the uniform variables in the shader that are given as parameters.
-	 * The m_program must be bound when this function is called.
-	 */
-	void updateParameters();
-
 	int m_numberPatchesHeight;
 	int m_numberPatchesWidth;
 	GLsizei m_numberPatches;

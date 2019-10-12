@@ -51,6 +51,36 @@ struct Parameters
 	 * \brief Level of details
 	 */
 	float pixelsPerTriangleEdge;
+
+	/**
+	 * \brief Time step for the water simulation
+	 */
+	float timeStep;
+
+	/**
+	 * \brief Iterations of the water simulation per frame displayed in the viewer
+	 */
+	int iterationsPerFrame;
+
+	/**
+	 * \brief Whether the water bounces on borders or go through them
+	 */
+	bool bounceOnBorders;
+
+	/**
+	 * \brief Initial water level when starting the simulation
+	 */
+	float initialWaterLevel;
+
+	/**
+	 * \brief Amount of rain per period of time
+	 */
+	float rainRate;
+
+	/**
+	 * \brief Amount of water that evaporate per period of time
+	 */
+	float evaporationRate;
 };
 
 }
