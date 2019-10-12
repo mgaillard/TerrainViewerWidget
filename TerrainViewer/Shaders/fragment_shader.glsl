@@ -13,6 +13,20 @@ uniform struct Terrain
 	float max_altitude;
 } terrain;
 
+// Minimum depth to display shallow water
+const float ShallowWater = 1e-2;
+
+// Minimum depth to display deep water
+const float DeepWater = 0.2;
+
+// Direction of light
+const vec3 light_direction = normalize(vec3(1.0, 1.0, 1.0));
+
+const float waterShininess = 800.0;
+
+// Position of the eye in the world
+uniform vec3 eye_world;
+
 // Color palette
 const int PaletteWhite = 1;
 const int PaletteDemScreen = 2;
@@ -26,13 +40,6 @@ const int ShadingUniformLight = 2;
 const int ShadingDirectionalLight = 3;
 const int ShadingSlope = 4;
 uniform int shading = ShadingNormal;
-
-// Minimum depth to display shallow water
-const float ShallowWater = 1e-2;
-// Minimum depth to display deep water
-const float DeepWater = 0.2;
-
-const vec3 light_direction = normalize(vec3(1.0, 1.0, 1.0));
 
 // Varying variables
 in vec3 position_model;
@@ -267,6 +274,17 @@ vec3 compute_color(const float altitude, const float slope, const float light, c
 	return vec3(0.0);
 }
 
+float water_specular_lighting()
+{
+	// Specular lighting model
+	const vec3 view_world = normalize(eye_world - position_world);
+	const vec3 reflect_world = normalize(reflect(-light_direction, normal_world));
+	const float diffuse_term = max(0.0, dot(normal_world, light_direction));
+	const float specular_term = pow(max(0.0, dot(reflect_world, view_world)), waterShininess);
+
+	return 0.25 + 0.75 * (diffuse_term + specular_term);
+}
+
 vec3 shading_normal()
 {
 	// Normalized altitude
@@ -299,8 +317,7 @@ vec3 shading_occlusion()
 	// Shading of water, specular
 	if (water > ShallowWater)
 	{
-		const float normal_term = max(0.0, dot(normal_world, light_direction));
-		color = color * (0.25 + 0.75 * normal_term);
+		color = color * water_specular_lighting();
 	}
 	// Shading of terrain, occlusion map
 	else

@@ -42,6 +42,12 @@ public:
 	QMatrix4x4 projectionMatrix() const;
 
 	/**
+	 * \brief Return the position of the eye
+	 * \return The position of the eye
+	 */
+	const QVector3D& eye() const;
+
+	/**
 	 * \brief Set the position of the eye
 	 * \param eye The position of the eye
 	 */

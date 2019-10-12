@@ -312,6 +312,9 @@ void TerrainViewerWidget::paintGL()
 		m_program->setUniformValue("PV", pvMatrix);
 		m_program->setUniformValue("PVM", pvmMatrix);
 
+		// Update position of the camera
+		m_program->setUniformValue("eye_world", m_camera.eye()); 
+
 		// Update viewportSize
 		const QVector2D viewportSize(height(), width());
 		m_program->setUniformValue("viewportSize", viewportSize);

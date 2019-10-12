@@ -34,6 +34,11 @@ QMatrix4x4 Camera::projectionMatrix() const
 	return projectionMatrix;
 }
 
+const QVector3D& Camera::eye() const
+{
+	return m_eye;
+}
+
 void Camera::setEye(const QVector3D& eye)
 {
 	m_eye = eye;
