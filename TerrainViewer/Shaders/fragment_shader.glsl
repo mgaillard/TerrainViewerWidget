@@ -27,6 +27,13 @@ const int ShadingDirectionalLight = 3;
 const int ShadingSlope = 4;
 uniform int shading = ShadingNormal;
 
+// Minimum depth to display shallow water
+const float ShallowWater = 1e-2;
+// Minimum depth to display deep water
+const float DeepWater = 0.2;
+
+const vec3 light_direction = normalize(vec3(1.0, 1.0, 1.0));
+
 // Varying variables
 in vec3 position_model;
 in vec3 position_world;
@@ -219,20 +226,26 @@ float compute_water()
 	return texture(terrain.waterMap_texture, texcoord).s;
 }
 
+vec3 compute_color_water(const float water)
+{
+	if (water > ShallowWater && water <= DeepWater)
+	{
+		// Shallow water is light blue
+		return mix(vec3(0.0, 0.5, 1.0), vec3(0.0, 0.0, 1.0), water / DeepWater);
+	}
+
+	// Deep water is dark blue
+	return mix(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.5), water - DeepWater);
+}
+
 // Compute the color of the fragment by choosing
 // the right color palette
 vec3 compute_color(const float altitude, const float slope, const float light, const float water)
 {
 	// Color of water
-	if (water > 1e-2 && water <= 0.2)
+	if (water > ShallowWater)
 	{
-		// Shallow water is light blue
-		return mix(vec3(0.0, 0.5, 1.0), vec3(0.0, 0.0, 1.0), water / 0.2);
-	}
-	else if (water > 0.2)
-	{
-		// Deep water is dark blue
-		return mix(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 0.5), water - 0.2);
+		return compute_color_water(water);
 	}
 
 	switch(palette)
@@ -256,8 +269,6 @@ vec3 compute_color(const float altitude, const float slope, const float light, c
 
 vec3 shading_normal()
 {
-	const vec3 light_direction = normalize(vec3(1.0, 1.0, 1.0));
-
 	// Normalized altitude
 	const float normalized_altitude = compute_normalized_altitude();
 	const float slope = compute_slope();
@@ -283,9 +294,21 @@ vec3 shading_occlusion()
 	const float slope = compute_slope();
 	const float occlusion = compute_occlusion();
 	const float water = compute_water();
-	const vec3 color = compute_color(normalized_altitude, slope, occlusion, water);
+	vec3 color = compute_color(normalized_altitude, slope, occlusion, water);
 
-	return color * occlusion;
+	// Shading of water, specular
+	if (water > ShallowWater)
+	{
+		const float normal_term = max(0.0, dot(normal_world, light_direction));
+		color = color * (0.25 + 0.75 * normal_term);
+	}
+	// Shading of terrain, occlusion map
+	else
+	{
+		color = color * occlusion;
+	}
+
+	return color;
 }
 
 // Compute the shading of the fragment by choosing
