@@ -218,6 +218,12 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 void TerrainViewerWidget::startWaterSimulation()
 {
 	makeCurrent();
+	m_waterSimulation.setTimeStep(m_parameters.timeStep);
+	m_waterSimulation.setPassesPerIterations(m_parameters.iterationsPerFrame);
+	m_waterSimulation.setBounceOnBoundaries(m_parameters.bounceOnBorders);
+	m_waterSimulation.setInitialWaterLevel(m_parameters.initialWaterLevel);
+	m_waterSimulation.setRainRate(m_parameters.rainRate);
+	m_waterSimulation.setEvaporationRate(m_parameters.evaporationRate);
 	m_waterSimulation.initSimulation(context(), m_terrain);
 	m_waterSimulation.start();
 	doneCurrent();
