@@ -199,7 +199,9 @@ void TerrainViewerWidget::setParameters(const Parameters& parameters)
 		// Update the light map if the lighting model changed
 		if (shadingChanged)
 		{
+			makeCurrent();
 			initLightMapTexture();
+			doneCurrent();
 		}
 
 		// Pass parameters to the water simulation
