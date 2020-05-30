@@ -39,7 +39,7 @@ terrainViewer->loadTerrain(terrain);
 ## Author
 Mathieu Gaillard
 
-This software has been developed for the CGT-520 and CGT-512 classes at Purdue University.
+This software has been developed for the CGT-520 and CGT-521 classes at Purdue University.
 
 ## License
 See the LICENSE file.
