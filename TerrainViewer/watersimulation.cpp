@@ -1,5 +1,6 @@
 #include "watersimulation.h"
 
+#include <QOpenGLVersionFunctionsFactory>
 #include <QOpenGLFunctions_4_3_Core>
 
 using namespace TerrainViewer;
@@ -59,7 +60,12 @@ void WaterSimulation::computeIteration(QOpenGLContext* context)
 
 void WaterSimulation::computeSingleIteration(QOpenGLContext* context)
 {
-	auto f = context->versionFunctions<QOpenGLFunctions_4_3_Core>();
+	auto f = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_4_3_Core>(context);
+
+	if (!f)
+	{
+		qFatal("Could not obtain required OpenGL context version");
+	}
 
 	// Local size in the compute shader
 	const int localSizeX = 4;
