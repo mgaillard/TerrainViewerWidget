@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/TerrainViewerWidget">
+        <file>shaders/fragment_shader.glsl</file>
+        <file>shaders/vertex_shader.glsl</file>
+        <file>shaders/tessellation_control.glsl</file>
+        <file>shaders/tessellation_evaluation.glsl</file>
+        <file>shaders/compute_normals.glsl</file>
+        <file>shaders/compute_water_flow.glsl</file>
+        <file>shaders/compute_water_height.glsl</file>
+    </qresource>
+</RCC>

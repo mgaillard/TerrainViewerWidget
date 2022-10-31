@@ -123,7 +123,7 @@ bool TerrainViewerWidget::reloadShaderPrograms()
 {
 	bool success = true;
 
-	const QString shader_dir = ":/MainWindow/Shaders/";
+	const QString shader_dir = ":/TerrainViewerWidget/shaders/";
 
 	if (m_computeNormalsProgram)
 	{

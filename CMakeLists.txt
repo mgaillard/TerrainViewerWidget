@@ -15,7 +15,7 @@ list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/")
 include(opencv)
 include(qt6)
 
-# add_subdirectory(TerrainViewerWidget)
+add_subdirectory(TerrainViewerWidget)
 add_subdirectory(TerrainViewer)
 
 # Set the project as startup project in Visual Studio

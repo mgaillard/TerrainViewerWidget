@@ -190,7 +190,7 @@ void WaterSimulation::stop()
 
 void WaterSimulation::initComputeShader()
 {
-	const QString shader_dir = ":/MainWindow/Shaders/";
+	const QString shader_dir = ":/TerrainViewerWidget/shaders/";
 
 	m_computeFlowProgram = std::make_unique<QOpenGLShaderProgram>();
 	m_computeFlowProgram->addShaderFromSourceFile(QOpenGLShader::Compute, shader_dir + "compute_water_flow.glsl");
