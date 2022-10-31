@@ -81,10 +81,10 @@ void Camera::roundLeftRight(float angle)
 	rotationMatrix.rotate(angle, 0.0, 0.0, 1.0);
 	
 	const QVector3D atToEye(m_eye - m_at);
-	const QVector3D rotatedAtToEye = rotationMatrix * atToEye;
+	const QVector3D rotatedAtToEye = rotationMatrix.map(atToEye);
 	m_eye = m_at + rotatedAtToEye;
 
-	m_up = (rotationMatrix * m_up).normalized();
+	m_up = rotationMatrix.map(m_up).normalized();
 }
 
 void Camera::roundUpDown(float angle)
@@ -95,7 +95,7 @@ void Camera::roundUpDown(float angle)
 	QMatrix4x4 rotationMatrix;
 	rotationMatrix.rotate(angle, rotateAxis);
 
-	const QVector3D rotatedAtToEye = rotationMatrix * atToEye;
+	const QVector3D rotatedAtToEye = rotationMatrix.map(atToEye);
 	m_eye = m_at + rotatedAtToEye;
 	m_up = QVector3D::crossProduct(m_eye, rotateAxis).normalized();
 }

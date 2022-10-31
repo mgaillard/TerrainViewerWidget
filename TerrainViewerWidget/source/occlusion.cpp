@@ -308,7 +308,7 @@ std::vector<float> computeOcclusionUniform(const Terrain& terrain,
 				const float projectionNormal = normal.x() * cosine + normal.y() * sine;
 
 				// Clamp the angleZenith with the normal so that dot(N, e) >= 0
-				const float theta = std::min(angleZenith, float(M_PI_2) + atan2(projectionNormal, normal.z()));
+				const float theta = std::min(angleZenith, float(M_PI_2) + std::atan2(projectionNormal, normal.z()));
 
 				light[i * width + j] += lightIntensity * (normal.z() / nbDirections) * sin(theta) * sin(theta);
 				light[i * width + j] += lightIntensity * (sin(M_PI / nbDirections) / M_PI) * ((theta - 0.5*sin(2.0 * theta))*projectionNormal);

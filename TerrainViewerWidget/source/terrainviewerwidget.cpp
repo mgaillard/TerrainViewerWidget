@@ -389,8 +389,8 @@ void TerrainViewerWidget::paintGL()
 
 void TerrainViewerWidget::mousePressEvent(QMouseEvent* event)
 {
-	const auto x = event->globalX();
-	const auto y = event->globalY();
+	const auto x = event->globalPosition().x();
+	const auto y = event->globalPosition().y();
 
 	if (event->button() == Qt::LeftButton)
 	{
@@ -413,8 +413,8 @@ void TerrainViewerWidget::mouseReleaseEvent(QMouseEvent* event)
 
 void TerrainViewerWidget::mouseMoveEvent(QMouseEvent* event)
 {
-	const auto x = event->globalX();
-	const auto y = event->globalY();
+	const auto x = event->globalPosition().x();
+	const auto y = event->globalPosition().y();
 
 	m_camera.mouseMoved(x, y);
 
