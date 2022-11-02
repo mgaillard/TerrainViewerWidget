@@ -13,8 +13,8 @@ If you want to test the software, the widget is wrapped in a sample application.
 - Use the trackball camera to rotate the terrain (click and drag)
 
 ### Prerequisites
-- Qt 5.9
-- OpenCV 3.4
+- Qt 6.2 LTS
+- OpenCV 4.5.5
 
 ### Using the Widget in your application
 ```c++
